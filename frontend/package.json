@@ -1,0 +1,22 @@
+{
+  "name": "figma-plugin-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Figma plugin with React",
+  "scripts": {
+    "build": "vite build && npx tsc src/plugin/code.ts --outDir dist --lib ES2015,DOM --esModuleInterop --skipLibCheck --types @figma/plugin-typings && mv dist/index.html dist/ui.html",
+    "dev": "vite build --watch"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.82.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0",
+    "vite-plugin-singlefile": "^0.13.5"
+  }
+}

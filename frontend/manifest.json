@@ -1,0 +1,12 @@
+{
+  "name": "AI Design Copilot",
+  "id": "ai-design-copilot",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "ui": "dist/ui.html",
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": ["http://localhost:3000"],
+    "reasoning": "Required for communication with local Express.js development server for API requests and data fetching"
+  }
+}
