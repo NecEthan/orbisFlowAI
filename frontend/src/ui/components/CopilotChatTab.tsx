@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
 import { colors, spacing, typography, borderRadius, buttonStyles, inputStyles } from '../styles';
-import { mockChatMessages, exampleQueries, ChatMessage } from '../mockData';
+import { exampleQueries, ChatMessage } from '../mockData';
 
 const CopilotChatTab: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>(mockChatMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: '1',
+      type: 'assistant',
+      content: 'Hello! I\'m your AI Design Copilot. I can help you with feedback responses, design critiques, and design system questions. What would you like to know?',
+      timestamp: new Date(),
+    }
+  ]);
   const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isLoading) return;
 
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -16,19 +25,62 @@ const CopilotChatTab: React.FC = () => {
       timestamp: new Date(),
     };
 
-    setMessages([...messages, newMessage]);
+    setMessages(prev => [...prev, newMessage]);
     setInputValue('');
+    setIsLoading(true);
+    setError(null);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      // Convert messages to OpenAI format
+      const openaiMessages = messages.map(msg => ({
+        role: msg.type === 'user' ? 'user' as const : 'assistant' as const,
+        content: msg.content
+      }));
+
+      // Add the new user message
+      openaiMessages.push({
+        role: 'user',
+        content: inputValue
+      });
+
+      const response = await fetch('http://localhost:3000/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messages: openaiMessages }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get AI response');
+      }
+
+      const data = await response.json();
+      
       const aiResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
-        content: 'I understand your question. Let me help you with that. This is a mock response - in the real implementation, this would connect to your AI backend.',
+        content: data.message,
         timestamp: new Date(),
       };
+      
       setMessages(prev => [...prev, aiResponse]);
-    }, 1000);
+    } catch (err: any) {
+      console.error('Chat error:', err);
+      setError(err.message || 'Failed to get AI response');
+      
+      // Add error message to chat
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'assistant',
+        content: `Sorry, I encountered an error: ${err.message || 'Failed to get AI response'}. Please check your API key and try again.`,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
 
@@ -43,6 +95,20 @@ const CopilotChatTab: React.FC = () => {
       height: '100%',
       backgroundColor: colors.background,
     }}>
+      <style>
+        {`
+          @keyframes typing {
+            0%, 60%, 100% {
+              transform: translateY(0);
+              opacity: 0.4;
+            }
+            30% {
+              transform: translateY(-10px);
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
       {/* Messages Area */}
       <div style={{ 
         flex: 1, 
@@ -88,6 +154,62 @@ const CopilotChatTab: React.FC = () => {
             </div>
           </div>
         ))}
+        
+        {/* Typing Indicator */}
+        {isLoading && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+            }}
+          >
+            <div
+              style={{
+                maxWidth: '80%',
+                padding: `${spacing.sm} ${spacing.md}`,
+                borderRadius: borderRadius.lg,
+                backgroundColor: colors.backgroundSecondary,
+                color: colors.textPrimary,
+                fontSize: typography.fontSize.sm,
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing.xs,
+              }}
+            >
+              <span>AI is thinking</span>
+              <div style={{ display: 'flex', gap: '2px' }}>
+                <div
+                  style={{
+                    width: '4px',
+                    height: '4px',
+                    borderRadius: '50%',
+                    backgroundColor: colors.textSecondary,
+                    animation: 'typing 1.4s infinite ease-in-out',
+                  }}
+                />
+                <div
+                  style={{
+                    width: '4px',
+                    height: '4px',
+                    borderRadius: '50%',
+                    backgroundColor: colors.textSecondary,
+                    animation: 'typing 1.4s infinite ease-in-out 0.2s',
+                  }}
+                />
+                <div
+                  style={{
+                    width: '4px',
+                    height: '4px',
+                    borderRadius: '50%',
+                    backgroundColor: colors.textSecondary,
+                    animation: 'typing 1.4s infinite ease-in-out 0.4s',
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Input Area */}
@@ -123,15 +245,17 @@ const CopilotChatTab: React.FC = () => {
           </div>
           <button
             onClick={handleSendMessage}
-            disabled={!inputValue.trim()}
+            disabled={!inputValue.trim() || isLoading}
             style={{
               ...buttonStyles.primary,
               padding: `${spacing.md} ${spacing.lg}`,
               fontSize: typography.fontSize.sm,
               minWidth: '80px',
+              opacity: (!inputValue.trim() || isLoading) ? 0.6 : 1,
+              cursor: (!inputValue.trim() || isLoading) ? 'not-allowed' : 'pointer',
             }}
           >
-            Send
+            {isLoading ? 'Sending...' : 'Send'}
           </button>
         </div>
       </div>

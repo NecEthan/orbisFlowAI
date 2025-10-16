@@ -38,39 +38,7 @@ export interface JiraTicket {
   created: Date;
 }
 
-// Mock Chat Messages
-export const mockChatMessages: ChatMessage[] = [
-  {
-    id: '1',
-    type: 'assistant',
-    content: 'Hi! I\'m your AI Design Copilot. I can help you with feedback responses, design reviews, and finding information. What would you like to work on?',
-    timestamp: new Date(Date.now() - 300000), // 5 minutes ago
-  },
-  {
-    id: '2',
-    type: 'user',
-    content: 'What fields are required for user signup?',
-    timestamp: new Date(Date.now() - 240000), // 4 minutes ago
-  },
-  {
-    id: '3',
-    type: 'assistant',
-    content: 'Based on your product requirements, the signup form needs:\n\n• Email (required)\n• Password (required)\n• Phone number (required for compliance)\n• Full name (required)\n• Terms acceptance (required)\n\nOptional fields:\n• Company name\n• Job title\n• Marketing preferences',
-    timestamp: new Date(Date.now() - 180000), // 3 minutes ago
-  },
-  {
-    id: '4',
-    type: 'user',
-    content: 'How should I respond to feedback about button colors?',
-    timestamp: new Date(Date.now() - 120000), // 2 minutes ago
-  },
-  {
-    id: '5',
-    type: 'assistant',
-    content: 'For subjective feedback like button colors, I recommend:\n\n"Thanks for the feedback! The current blue (#18A0FB) aligns with our brand guidelines and accessibility standards (4.5:1 contrast ratio). However, I\'d be happy to explore alternatives. Would you prefer:\n\n• A darker blue for more contrast?\n• A different color that still meets accessibility requirements?\n• A/B testing different options?\n\nLet me know your preference and I can create some variations."',
-    timestamp: new Date(Date.now() - 60000), // 1 minute ago
-  },
-];
+// Note: mockChatMessages removed - now using live OpenAI integration
 
 // Mock Design Review Results
 export const mockDesignReviewResults: DesignReviewResult[] = [
