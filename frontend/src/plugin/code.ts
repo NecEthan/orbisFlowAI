@@ -1,6 +1,6 @@
 figma.showUI(__html__, {
-  width: 400,
-  height: 600,
+  width: 1000,
+  height: 1200,
   themeColors: true
 });
 
@@ -21,6 +21,12 @@ figma.ui.onmessage = async (msg) => {
     figma.viewport.scrollAndZoomIntoView([text]);
     
     figma.notify(`Created: ${msg.text}`);
+  }
+  
+  // Handle resize requests from UI
+  if (msg.type === 'resize') {
+    const { width, height } = msg.size;
+    figma.ui.resize(width, height);
   }
   
   // Future message handlers for AI Copilot features

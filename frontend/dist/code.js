@@ -36,20 +36,20 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var _this = this;
 figma.showUI(__html__, {
-    width: 400,
-    height: 600,
+    width: 1000,
+    height: 1200,
     themeColors: true
 });
 figma.ui.onmessage = function (msg) { return __awaiter(_this, void 0, void 0, function () {
-    var text, center;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
+    var text, center, _a, width, height;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
             case 0:
                 if (!(msg.type === 'create-text')) return [3 /*break*/, 2];
                 text = figma.createText();
                 return [4 /*yield*/, figma.loadFontAsync({ family: "Inter", style: "Regular" })];
             case 1:
-                _a.sent();
+                _b.sent();
                 text.characters = msg.text;
                 center = figma.viewport.center;
                 text.x = center.x - (text.width / 2);
@@ -58,8 +58,13 @@ figma.ui.onmessage = function (msg) { return __awaiter(_this, void 0, void 0, fu
                 figma.currentPage.selection = [text];
                 figma.viewport.scrollAndZoomIntoView([text]);
                 figma.notify("Created: ".concat(msg.text));
-                _a.label = 2;
+                _b.label = 2;
             case 2:
+                // Handle resize requests from UI
+                if (msg.type === 'resize') {
+                    _a = msg.size, width = _a.width, height = _a.height;
+                    figma.ui.resize(width, height);
+                }
                 // Future message handlers for AI Copilot features
                 if (msg.type === 'generate-feedback-response') {
                     // TODO: Connect to AI backend for response generation

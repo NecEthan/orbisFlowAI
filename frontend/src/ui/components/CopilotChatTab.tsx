@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { colors, spacing, typography, borderRadius, buttonStyles, inputStyles } from '../styles';
-import { mockChatMessages, quickActions, exampleQueries, ChatMessage } from '../mockData';
+import { mockChatMessages, exampleQueries, ChatMessage } from '../mockData';
 
 const CopilotChatTab: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>(mockChatMessages);
@@ -31,9 +31,6 @@ const CopilotChatTab: React.FC = () => {
     }, 1000);
   };
 
-  const handleQuickAction = (action: string) => {
-    setInputValue(action);
-  };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -93,112 +90,45 @@ const CopilotChatTab: React.FC = () => {
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <div style={{ 
-        padding: `${spacing.sm} ${spacing.md}`,
-        borderTop: `1px solid ${colors.border}`,
-        backgroundColor: colors.backgroundSecondary,
-      }}>
-        <div style={{ 
-          fontSize: typography.fontSize.xs, 
-          color: colors.textSecondary, 
-          marginBottom: spacing.sm,
-          fontWeight: typography.fontWeight.medium,
-        }}>
-          Quick Actions
-        </div>
-        <div style={{ 
-          display: 'flex', 
-          gap: spacing.sm, 
-          flexWrap: 'wrap',
-        }}>
-          {quickActions.map((action) => (
-            <button
-              key={action.id}
-              onClick={() => handleQuickAction(action.title)}
-              style={{
-                ...buttonStyles.secondary,
-                padding: `${spacing.xs} ${spacing.sm}`,
-                fontSize: typography.fontSize.xs,
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing.xs,
-              }}
-            >
-              <span>{action.icon}</span>
-              {action.title}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Example Queries */}
-      <div style={{ 
-        padding: `${spacing.sm} ${spacing.md}`,
-        borderTop: `1px solid ${colors.border}`,
-        backgroundColor: colors.backgroundSecondary,
-      }}>
-        <div style={{ 
-          fontSize: typography.fontSize.xs, 
-          color: colors.textSecondary, 
-          marginBottom: spacing.sm,
-          fontWeight: typography.fontWeight.medium,
-        }}>
-          Try asking:
-        </div>
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column',
-          gap: spacing.xs,
-        }}>
-          {exampleQueries.slice(0, 3).map((query, index) => (
-            <button
-              key={index}
-              onClick={() => setInputValue(query)}
-              style={{
-                ...buttonStyles.secondary,
-                padding: `${spacing.xs} ${spacing.sm}`,
-                fontSize: typography.fontSize.xs,
-                textAlign: 'left',
-                justifyContent: 'flex-start',
-                backgroundColor: 'transparent',
-                border: 'none',
-                color: colors.textSecondary,
-                cursor: 'pointer',
-              }}
-            >
-              "{query}"
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Input Area */}
       <div style={{ 
-        padding: spacing.md,
+        padding: `${spacing.md} ${spacing.lg}`,
         borderTop: `1px solid ${colors.border}`,
         backgroundColor: colors.white,
       }}>
-        <div style={{ display: 'flex', gap: spacing.sm }}>
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-            placeholder="Ask me anything about your design..."
-            style={{
-              ...inputStyles.base,
-              flex: 1,
+        <div style={{ display: 'flex', gap: spacing.md, alignItems: 'flex-end' }}>
+          <div style={{ flex: 1 }}>
+            <label style={{
+              display: 'block',
               fontSize: typography.fontSize.sm,
-            }}
-          />
+              fontWeight: typography.fontWeight.medium,
+              color: colors.textPrimary,
+              marginBottom: spacing.xs,
+            }}>
+              Ask your AI Design Copilot:
+            </label>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              placeholder="What fields are required for user signup? How should I respond to feedback about colors?"
+              style={{
+                ...inputStyles.base,
+                width: '100%',
+                fontSize: typography.fontSize.sm,
+                padding: `${spacing.md} ${spacing.md}`,
+              }}
+            />
+          </div>
           <button
             onClick={handleSendMessage}
             disabled={!inputValue.trim()}
             style={{
               ...buttonStyles.primary,
-              padding: `${spacing.sm} ${spacing.md}`,
+              padding: `${spacing.md} ${spacing.lg}`,
               fontSize: typography.fontSize.sm,
+              minWidth: '80px',
             }}
           >
             Send
