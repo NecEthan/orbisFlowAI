@@ -2,6 +2,7 @@ import express from 'express';
 import { Request, Response } from 'express';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
+import multer from 'multer';
 
 // Load environment variables
 dotenv.config();
@@ -15,6 +16,21 @@ const openai = new OpenAI({
 });
 
 app.use(express.json());
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'));
+    }
+  },
+});
 
 // Enable CORS for Figma plugin
 app.use((req, res, next) => {
@@ -87,6 +103,106 @@ Always be helpful, professional, and focus on user-centered design principles.`;
     } else {
       return res.status(500).json({ error: 'Failed to get AI response' });
     }
+  }
+});
+
+// Design standards endpoints
+app.post('/api/design-standards', async (req: Request, res: Response) => {
+  try {
+    const { standards } = req.body;
+
+    if (!standards || typeof standards !== 'object') {
+      return res.status(400).json({ error: 'Design standards object is required' });
+    }
+
+    // In a real app, this would save to a database
+    // For now, we'll just simulate saving
+    console.log('Saving design standards:', standards);
+    
+    res.json({ 
+      message: 'Design standards saved successfully',
+      standards: standards
+    });
+
+  } catch (error: any) {
+    console.error('Design Standards Save Error:', error);
+    res.status(500).json({ error: 'Failed to save design standards' });
+  }
+});
+
+app.get('/api/design-standards', async (req: Request, res: Response) => {
+  try {
+    // In a real app, this would load from a database
+    // For now, we'll return empty standards
+    const defaultStandards = {
+      bestPractices: '',
+      accessibilityStandards: '',
+      brandGuidelines: '',
+      designSystem: '',
+      userExperiencePrinciples: '',
+      technicalRequirements: '',
+    };
+    
+    res.json({ 
+      standards: defaultStandards
+    });
+
+  } catch (error: any) {
+    console.error('Design Standards Load Error:', error);
+    res.status(500).json({ error: 'Failed to load design standards' });
+  }
+});
+
+// PDF upload and processing endpoint
+app.post('/api/upload-pdf', upload.array('files', 5), async (req: Request, res: Response) => {
+  try {
+    const files = req.files as Express.Multer.File[];
+    
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
+    }
+
+    // In a real app, you would use a PDF parsing library like pdf-parse
+    // For now, we'll simulate the processing
+    const processedFiles = files.map(file => ({
+      name: file.originalname,
+      size: file.size,
+      extractedText: `[Simulated extracted text from ${file.originalname}]\n\nThis would contain the actual text content extracted from the PDF file. In a real implementation, you would use a library like pdf-parse to extract text content and then parse it to identify different sections like:\n\n• Best Practices\n• Accessibility Standards\n• Brand Guidelines\n• Design System\n• UX Principles\n• Technical Requirements\n\nThe extracted content would then be used to auto-populate the design standards form fields.`,
+      sections: {
+        bestPractices: 'Extracted best practices content would appear here',
+        accessibilityStandards: 'Extracted accessibility standards would appear here',
+        brandGuidelines: 'Extracted brand guidelines would appear here',
+        designSystem: 'Extracted design system content would appear here',
+        userExperiencePrinciples: 'Extracted UX principles would appear here',
+        technicalRequirements: 'Extracted technical requirements would appear here',
+      }
+    }));
+
+    res.json({
+      message: `Successfully processed ${files.length} PDF file(s)`,
+      files: processedFiles,
+      extractedContent: processedFiles.reduce((acc, file) => {
+        return {
+          bestPractices: acc.bestPractices + (file.sections.bestPractices ? `\n\nFrom ${file.name}:\n${file.sections.bestPractices}` : ''),
+          accessibilityStandards: acc.accessibilityStandards + (file.sections.accessibilityStandards ? `\n\nFrom ${file.name}:\n${file.sections.accessibilityStandards}` : ''),
+          brandGuidelines: acc.brandGuidelines + (file.sections.brandGuidelines ? `\n\nFrom ${file.name}:\n${file.sections.brandGuidelines}` : ''),
+          designSystem: acc.designSystem + (file.sections.designSystem ? `\n\nFrom ${file.name}:\n${file.sections.designSystem}` : ''),
+          userExperiencePrinciples: acc.userExperiencePrinciples + (file.sections.userExperiencePrinciples ? `\n\nFrom ${file.name}:\n${file.sections.userExperiencePrinciples}` : ''),
+          technicalRequirements: acc.technicalRequirements + (file.sections.technicalRequirements ? `\n\nFrom ${file.name}:\n${file.sections.technicalRequirements}` : ''),
+        };
+      }, {
+        bestPractices: '',
+        accessibilityStandards: '',
+        brandGuidelines: '',
+        designSystem: '',
+        userExperiencePrinciples: '',
+        technicalRequirements: '',
+      })
+    });
+
+  } catch (error: any) {
+    console.error('PDF Upload Error:', error);
+    res.status(500).json({ error: 'Failed to process PDF files' });
   }
 });
 

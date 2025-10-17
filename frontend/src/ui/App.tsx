@@ -3,6 +3,7 @@ import TabNavigation from './components/TabNavigation';
 import CopilotChatTab from './components/CopilotChatTab';
 import ReviewDesignTab from './components/ReviewDesignTab';
 import ManageFeedbackTab from './components/ManageFeedbackTab';
+import DesignStandardsTab from './components/DesignStandardsTab';
 import SettingsTab from './components/SettingsTab';
 import { colors, spacing, typography, borderRadius } from './styles';
 
@@ -13,6 +14,7 @@ const App: React.FC = () => {
     { id: 'chat', label: 'Copilot Chat', icon: '🤖' },
     { id: 'review', label: 'Review Design', icon: '🔍' },
     { id: 'feedback', label: 'Manage Feedback', icon: '💬' },
+    { id: 'standards', label: 'Design Standards', icon: '📋' },
     { id: 'settings', label: 'Settings', icon: '⚙️' },
   ];
 
@@ -82,6 +84,8 @@ const App: React.FC = () => {
         return <ReviewDesignTab />;
       case 'feedback':
         return <ManageFeedbackTab />;
+      case 'standards':
+        return <DesignStandardsTab />;
       case 'settings':
         return <SettingsTab />;
       default:
@@ -90,7 +94,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div style={{ 
+    <div style={{
       display: 'flex', 
       height: '100vh',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
