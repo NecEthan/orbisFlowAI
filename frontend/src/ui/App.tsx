@@ -7,11 +7,17 @@ import DesignStandardsTab from './components/DesignStandardsTab';
 import CreateJiraTicketTab from './components/CreateJiraTicketTab';
 import TeamsMeetingSummaryTab from './components/TeamsMeetingSummaryTab';
 import SettingsTab from './components/SettingsTab';
+import LoginPage from './components/LoginPage';
 import { colors, spacing, typography, borderRadius } from './styles';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('chat');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [activeTab, setActiveTab] = useState('standards'); // Start with Design Standards tab
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+  };
 
   const tabs = [
     { id: 'chat', label: 'Copilot Chat', icon: '🤖' },
@@ -101,6 +107,11 @@ const App: React.FC = () => {
         return <CopilotChatTab />;
     }
   };
+
+  // Show login page if not logged in
+  if (!isLoggedIn) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
 
   return (
     <div style={{
