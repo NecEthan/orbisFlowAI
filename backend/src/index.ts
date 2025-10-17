@@ -90,6 +90,67 @@ Always be helpful, professional, and focus on user-centered design principles.`;
   }
 });
 
+// Feedback response generation endpoint
+app.post('/api/feedback-response', async (req: Request, res: Response) => {
+  try {
+    const { feedback } = req.body;
+
+    if (!feedback || typeof feedback !== 'string') {
+      return res.status(400).json({ error: 'Feedback text is required' });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: 'OpenAI API key not configured' });
+    }
+
+    // System prompt specifically for feedback response generation
+    const systemPrompt = `You are an AI assistant that helps designers craft professional, respectful responses to stakeholder feedback. 
+
+Your task is to generate a thoughtful response that:
+- Acknowledges the feedback respectfully
+- Shows understanding of the concern
+- Provides context or explanation when appropriate
+- Offers solutions or next steps
+- Maintains a collaborative, professional tone
+- Is concise but comprehensive
+
+The response should be ready to send directly to stakeholders. Format it as a professional email or message response.`;
+
+    const completion = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { 
+          role: 'user', 
+          content: `Please generate a professional response to this feedback: "${feedback}"` 
+        }
+      ],
+      max_tokens: 500,
+      temperature: 0.7,
+    });
+
+    const response = completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
+
+    res.json({ 
+      response: response,
+      usage: completion.usage 
+    });
+
+  } catch (error: any) {
+    console.error('Feedback Response Generation Error:', error);
+    
+    if (error.code === 'insufficient_quota') {
+      return res.status(402).json({ error: 'OpenAI API quota exceeded' });
+    } else if (error.code === 'invalid_api_key') {
+      return res.status(401).json({ error: 'Invalid OpenAI API key' });
+    } else if (error.code === 'rate_limit_exceeded') {
+      return res.status(429).json({ error: 'Rate limit exceeded. Please try again later.' });
+    } else {
+      return res.status(500).json({ error: 'Failed to generate feedback response' });
+    }
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
   console.log(`OpenAI model: ${process.env.OPENAI_MODEL || 'gpt-4'}`);

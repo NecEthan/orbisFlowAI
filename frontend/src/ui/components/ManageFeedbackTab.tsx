@@ -7,35 +7,43 @@ const ManageFeedbackTab: React.FC = () => {
   const [feedbackInput, setFeedbackInput] = useState('');
   const [generatedResponse, setGeneratedResponse] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [newTicket, setNewTicket] = useState({
     title: '',
     description: '',
     priority: 'Medium' as 'Low' | 'Medium' | 'High',
   });
 
-  const handleGenerateResponse = () => {
+  const handleGenerateResponse = async () => {
     if (!feedbackInput.trim()) return;
 
     setIsGenerating(true);
+    setError(null);
+    setGeneratedResponse('');
     
-    // Simulate AI response generation
-    setTimeout(() => {
-      const mockResponse = `Thank you for the feedback! I appreciate you taking the time to share your thoughts.
+    try {
+      const response = await fetch('http://localhost:3000/api/feedback-response', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          feedback: feedbackInput.trim()
+        }),
+      });
 
-Regarding your comment about "${feedbackInput}", I'd like to address this thoughtfully:
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate response');
+      }
 
-• I understand your concern and will review this with the team
-• Let me provide some context about the design decisions made
-• I'd be happy to explore alternative approaches if needed
-
-Would you be available for a quick call to discuss this further? I'd love to hear more about your perspective and work together on a solution that meets everyone's needs.
-
-Best regards,
-Design Team`;
-
-      setGeneratedResponse(mockResponse);
+      const data = await response.json();
+      setGeneratedResponse(data.response);
+    } catch (err: any) {
+      setError(err.message || 'An error occurred while generating the response');
+    } finally {
       setIsGenerating(false);
-    }, 1500);
+    }
   };
 
   const handleCreateTicket = () => {
@@ -201,6 +209,30 @@ Design Team`;
                 </>
               )}
             </button>
+
+            {error && (
+              <div style={{
+                ...cardStyles.base,
+                backgroundColor: '#FEF2F2',
+                border: `1px solid ${colors.error}`,
+              }}>
+                <div style={{ 
+                  fontSize: typography.fontSize.sm,
+                  fontWeight: typography.fontWeight.medium,
+                  color: colors.error,
+                  marginBottom: spacing.sm,
+                }}>
+                  Error:
+                </div>
+                <div style={{
+                  fontSize: typography.fontSize.sm,
+                  color: colors.error,
+                  lineHeight: typography.lineHeight.normal,
+                }}>
+                  {error}
+                </div>
+              </div>
+            )}
 
             {generatedResponse && (
               <div style={{
