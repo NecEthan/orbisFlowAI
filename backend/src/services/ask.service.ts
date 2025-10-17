@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import OpenAI from "openai";
 import { supabase } from '../supabaseClient';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || 'placeholder-key' });
 
 export async function askQuestion(req: Request, res: Response) {
   try {
@@ -24,7 +24,7 @@ export async function askQuestion(req: Request, res: Response) {
     if (error) throw error;
     if (!docs || docs.length === 0) return res.json({ answer: "No relevant documents found." });
 
-    const contextText = docs.map(d => d.content).join("\n\n");
+    const contextText = docs.map((d: any) => d.content).join("\n\n");
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4.1-mini",

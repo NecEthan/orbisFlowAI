@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { colors, spacing, typography, borderRadius, buttonStyles, inputStyles } from '../styles';
+import { supabase } from '../../lib/supabaseClient';
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -9,19 +10,39 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // If any field has content, proceed to login
-    if (email.trim() || password.trim()) {
-      setIsLoading(true);
+    if (!email.trim() || !password.trim()) {
+      setError('Please enter both email and password');
+      return;
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Sign in with Supabase
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
+      });
       
-      // Simulate a brief loading state
-      setTimeout(() => {
+      if (signInError) {
+        setError(signInError.message);
         setIsLoading(false);
+        return;
+      }
+      
+      if (data.session) {
+        // Successfully logged in
         onLogin();
-      }, 1000);
+      }
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred');
+      setIsLoading(false);
     }
   };
 
@@ -111,6 +132,28 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
         {/* Login Form */}
         <form onSubmit={handleSubmit}>
+          {error && (
+            <div style={{
+              padding: spacing.md,
+              background: 'rgba(220, 53, 69, 0.1)',
+              border: '1px solid rgba(220, 53, 69, 0.3)',
+              borderRadius: '8px',
+              marginBottom: spacing.lg,
+            }}>
+              <p style={{
+                margin: 0,
+                fontSize: typography.fontSize.sm,
+                color: '#dc3545',
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing.xs,
+              }}>
+                <span>⚠️</span>
+                {error}
+              </p>
+            </div>
+          )}
+          
           <div style={{ marginBottom: spacing.lg }}>
             <label style={{
               display: 'block',
@@ -253,7 +296,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             color: colors.textTertiary,
             lineHeight: typography.lineHeight.relaxed,
           }}>
-            Enter any information above and press Enter to continue
+            Sign in with your Supabase account credentials
           </p>
         </div>
       </div>

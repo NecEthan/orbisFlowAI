@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { colors, spacing, typography, borderRadius, buttonStyles, inputStyles, cardStyles } from '../styles';
+import { apiClient } from '../../lib/apiClient';
 
 interface MeetingSummary {
   keyDecisions: string[];
@@ -30,11 +31,8 @@ const TeamsMeetingSummaryTab: React.FC = () => {
     setSummary(null);
 
     try {
-      const response = await fetch('http://localhost:3000/api/summarize-meeting', {
+      const response = await apiClient('/api/summarize-meeting', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           transcript: transcript.trim(),
           useDesignStandards: useDesignStandards,

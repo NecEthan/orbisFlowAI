@@ -5,6 +5,16 @@ import dotenv from 'dotenv';
 import multer from 'multer';
 import uploadDocsRouter from './routes/upload-docs';
 import askQuestionRouter from './routes/ask';
+import { supabase } from './supabaseClient';
+
+// Extend Request interface to include user
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+    }
+  }
+}
 
 // Load environment variables
 dotenv.config();
@@ -14,7 +24,7 @@ const port = process.env.PORT || 3000;
 
 // Initialize OpenAI
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || 'placeholder-key',
 });
 
 app.use(express.json());
@@ -48,6 +58,27 @@ app.use((req, res, next) => {
     next();
   }
 });
+
+// Auth middleware
+const authenticateUser = async (req: Request, res: Response, next: any) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  
+  if (error || !user) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+  
+  req.user = user;
+  next();
+};
+
+// Apply to all /api routes
+app.use('/api', authenticateUser);
 
 // Hello World endpoint
 app.get('/api/hello', (req: Request, res: Response) => {

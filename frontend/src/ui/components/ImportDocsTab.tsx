@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { colors, spacing, typography, buttonStyles } from '../styles';
+import { apiClient } from '../../lib/apiClient';
 
 const ImportDocsTab: React.FC = () => {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -56,7 +57,7 @@ const ImportDocsTab: React.FC = () => {
         formData.append('files', file);
       });
 
-      const response = await fetch('http://localhost:3000/api/upload-pdf', {
+      const response = await apiClient('/api/upload-pdf', {
         method: 'POST',
         body: formData,
       });

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { colors, spacing, typography, borderRadius, buttonStyles, inputStyles } from '../styles';
 import { exampleQueries, ChatMessage } from '../mockData';
+import { apiClient } from '../../lib/apiClient';
 
 const CopilotChatTab: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -43,11 +44,8 @@ const CopilotChatTab: React.FC = () => {
         content: inputValue
       });
 
-      const response = await fetch('http://localhost:3000/api/chat', {
+      const response = await apiClient('/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ messages: openaiMessages }),
       });
 

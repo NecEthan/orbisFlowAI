@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { colors, spacing, typography, borderRadius, buttonStyles, inputStyles, cardStyles } from '../styles';
+import { apiClient } from '../../lib/apiClient';
 
 interface JiraTicket {
   title: string;
@@ -37,11 +38,8 @@ const CreateJiraTicketTab: React.FC = () => {
     setGeneratedTicket(null);
 
     try {
-      const response = await fetch('http://localhost:3000/api/generate-jira-ticket', {
+      const response = await apiClient('/api/generate-jira-ticket', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           input: rawInput.trim(),
           useDesignStandards: useDesignStandards,

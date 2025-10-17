@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { colors, spacing, typography, borderRadius, buttonStyles, inputStyles, cardStyles } from '../styles';
+import { apiClient } from '../../lib/apiClient';
 
 interface DesignStandards {
   bestPractices: string;
@@ -30,7 +31,7 @@ const DesignStandardsTab: React.FC = () => {
   useEffect(() => {
     const loadStandards = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/design-standards');
+        const response = await apiClient('/api/design-standards');
         if (response.ok) {
           const data = await response.json();
           setStandards(data.standards);
@@ -50,11 +51,8 @@ const DesignStandardsTab: React.FC = () => {
     setSaveMessage(null);
     
     try {
-      const response = await fetch('http://localhost:3000/api/design-standards', {
+      const response = await apiClient('/api/design-standards', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ standards }),
       });
 
@@ -191,7 +189,7 @@ const DesignStandardsTab: React.FC = () => {
         formData.append('files', file);
       });
 
-      const response = await fetch('http://localhost:3000/api/upload-pdf', {
+      const response = await apiClient('/api/upload-pdf', {
         method: 'POST',
         body: formData,
       });

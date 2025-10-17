@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { colors, spacing, typography, borderRadius, buttonStyles, inputStyles, cardStyles } from '../styles';
 import { mockFeedbackAnalytics, mockJiraTickets, JiraTicket } from '../mockData';
+import { apiClient } from '../../lib/apiClient';
 
 const ManageFeedbackTab: React.FC = () => {
   const [activeSection, setActiveSection] = useState<'response' | 'analytics' | 'jira'>('response');
@@ -24,11 +25,8 @@ const ManageFeedbackTab: React.FC = () => {
     setGeneratedResponse('');
     
     try {
-      const response = await fetch('http://localhost:3000/api/feedback-response', {
+      const response = await apiClient('/api/feedback-response', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ 
           feedback: feedbackInput.trim(),
           feedbackType: feedbackType,
