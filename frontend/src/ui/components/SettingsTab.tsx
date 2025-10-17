@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { colors, spacing, typography, borderRadius, buttonStyles, cardStyles } from '../styles';
 
-const SettingsTab: React.FC = () => {
+interface SettingsTabProps {
+  onSignOut?: () => void;
+}
+
+const SettingsTab: React.FC<SettingsTabProps> = ({ onSignOut }) => {
   const [settings, setSettings] = useState({
     privacy: {
       dataCollection: true,
@@ -488,6 +492,70 @@ const SettingsTab: React.FC = () => {
             }}>
               Made with ❤️ for designers
             </div>
+          </div>
+        </div>
+
+        {/* Sign Out Section */}
+        <div style={{ 
+          ...cardStyles.base,
+          background: 'linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(220, 53, 69, 0.05) 100%)',
+          border: '2px solid rgba(220, 53, 69, 0.2)',
+          borderRadius: '12px',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 4px 15px rgba(220, 53, 69, 0.1)',
+        }}>
+          <h3 style={{ 
+            margin: `0 0 ${spacing.md} 0`,
+            fontSize: typography.fontSize.md,
+            fontWeight: typography.fontWeight.semibold,
+            color: colors.textPrimary,
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing.sm,
+          }}>
+            🚪 Account
+          </h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
+            <div style={{ 
+              fontSize: typography.fontSize.sm,
+              color: colors.textSecondary,
+              marginBottom: spacing.sm,
+            }}>
+              Sign out of your account to return to the login screen.
+            </div>
+            
+            <button
+              onClick={onSignOut}
+              style={{
+                ...buttonStyles.secondary,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: spacing.sm,
+                backgroundColor: '#dc3545',
+                color: 'white',
+                borderColor: '#dc3545',
+                padding: `${spacing.md} ${spacing.lg}`,
+                fontSize: typography.fontSize.sm,
+                fontWeight: typography.fontWeight.semibold,
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 12px rgba(220, 53, 69, 0.3)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#c82333';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(220, 53, 69, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#dc3545';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(220, 53, 69, 0.3)';
+              }}
+            >
+              <span>🚪</span>
+              Sign Out
+            </button>
           </div>
         </div>
       </div>

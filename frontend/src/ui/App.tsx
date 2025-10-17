@@ -8,6 +8,7 @@ import CreateJiraTicketTab from './components/CreateJiraTicketTab';
 import TeamsMeetingSummaryTab from './components/TeamsMeetingSummaryTab';
 import SettingsTab from './components/SettingsTab';
 import LoginPage from './components/LoginPage';
+import ImportDocsTab from './components/ImportDocsTab';
 import { colors, spacing, typography, borderRadius } from './styles';
 
 const App: React.FC = () => {
@@ -19,11 +20,16 @@ const App: React.FC = () => {
     setIsLoggedIn(true);
   };
 
+  const handleSignOut = () => {
+    setIsLoggedIn(false);
+  };
+
   const tabs = [
     { id: 'chat', label: 'Copilot Chat', icon: '🤖' },
     { id: 'review', label: 'Review Design', icon: '🔍' },
     { id: 'feedback', label: 'Manage Feedback', icon: '💬' },
     { id: 'standards', label: 'Design Standards', icon: '📋' },
+    { id: 'import', label: 'Import Docs', icon: '📚' },
     { id: 'jira', label: 'Create Jira Ticket', icon: '🎫' },
     { id: 'teams', label: 'Teams Meeting Summary', icon: '📝' },
     { id: 'settings', label: 'Settings', icon: '⚙️' },
@@ -97,12 +103,14 @@ const App: React.FC = () => {
         return <ManageFeedbackTab />;
       case 'standards':
         return <DesignStandardsTab />;
+      case 'import':
+        return <ImportDocsTab />;
       case 'jira':
         return <CreateJiraTicketTab />;
       case 'teams':
         return <TeamsMeetingSummaryTab />;
       case 'settings':
-        return <SettingsTab />;
+        return <SettingsTab onSignOut={handleSignOut} />;
       default:
         return <CopilotChatTab />;
     }
