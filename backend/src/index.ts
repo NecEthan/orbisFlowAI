@@ -6,6 +6,7 @@ import multer from 'multer';
 import uploadDocsRouter from './routes/upload-docs';
 import askQuestionRouter from './routes/ask';
 import { supabase } from './supabaseClient';
+const pdfPoppler = require('pdf-poppler');
 
 // Extend Request interface to include user
 declare global {
@@ -235,8 +236,50 @@ app.post('/api/upload-pdf', upload.array('files', 5), async (req: Request, res: 
 
     for (const file of files) {
       try {
-        // Extract text from PDF (simplified for now - in production use pdf-parse)
-        const extractedText = `[Extracted text from ${file.originalname}]\n\nThis is a placeholder for actual PDF text extraction. In production, you would use a library like pdf-parse to extract the actual text content from the PDF file. The extracted text would then be chunked and converted to embeddings for vector storage.`;
+        // Extract text from PDF using pdf-poppler
+        let extractedText = '';
+        try {
+          // Create a temporary file for pdf-poppler
+          const fs = require('fs');
+          const path = require('path');
+          const os = require('os');
+          
+          const tempDir = os.tmpdir();
+          const tempFilePath = path.join(tempDir, `temp_${Date.now()}_${file.originalname}`);
+          
+          // Write buffer to temporary file
+          fs.writeFileSync(tempFilePath, file.buffer);
+          
+          // Configure pdf-poppler options
+          const options = {
+            format: 'txt',
+            out_dir: tempDir,
+            out_prefix: 'pdf_extract',
+            page: null // Extract all pages
+          };
+          
+          // Convert PDF to text
+          const result = await pdfPoppler.convert(tempFilePath, options);
+          
+          // Read the extracted text
+          const outputFile = path.join(tempDir, 'pdf_extract.txt');
+          if (fs.existsSync(outputFile)) {
+            extractedText = fs.readFileSync(outputFile, 'utf8');
+            fs.unlinkSync(outputFile); // Clean up
+          }
+          
+          // Clean up temp file
+          fs.unlinkSync(tempFilePath);
+          
+          if (!extractedText || extractedText.trim().length === 0) {
+            throw new Error('No text content found in PDF');
+          }
+          
+          console.log(`Extracted ${extractedText.length} characters from ${file.originalname}`);
+        } catch (pdfError: any) {
+          console.error(`PDF parsing error for ${file.originalname}:`, pdfError.message);
+          extractedText = `[Failed to extract text from ${file.originalname}. File may be image-based, corrupted, or password-protected.]`;
+        }
         
         // Chunk the text
         const chunks = chunkText(extractedText, 800, 200);
@@ -312,7 +355,8 @@ app.post('/api/upload-pdf', upload.array('files', 5), async (req: Request, res: 
           size: file.size,
           chunks: chunks.length,
           status: 'processed',
-          documentId: documentId
+          documentId: documentId,
+          extractedChars: extractedText.length
         });
 
       } catch (fileError: any) {
