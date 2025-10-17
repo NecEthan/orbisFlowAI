@@ -6,7 +6,12 @@
   "ui": "dist/ui.html",
   "editorType": ["figma"],
   "networkAccess": {
-    "allowedDomains": ["http://localhost:3000"],
-    "reasoning": "Required for communication with local Express.js development server for API requests and data fetching"
+    "allowedDomains": [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "https://*.supabase.co",
+      "https://ddojfdecbnlxbeyvylqp.supabase.co"
+    ],
+    "reasoning": "Required for communication with local Express.js development server and Supabase authentication services"
   }
 }

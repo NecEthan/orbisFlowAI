@@ -1,14 +1,17 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "lib": ["es6", "dom", "es2017"],
+    "target": "es2020",
+    "lib": ["es2020", "dom", "es2017"],
+    "module": "esnext",
     "moduleResolution": "node",
     "jsx": "react",
     "strict": true,
     "typeRoots": ["./node_modules/@types", "./node_modules/@figma"],
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules"]

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { colors, spacing, typography, borderRadius, buttonStyles, inputStyles } from '../styles';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -17,6 +17,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     
     if (!email.trim() || !password.trim()) {
       setError('Please enter both email and password');
+      return;
+    }
+    
+    if (!isSupabaseConfigured()) {
+      setError('Supabase is not configured');
       return;
     }
     
