@@ -10,6 +10,7 @@ import SettingsTab from './components/SettingsTab';
 import LoginPage from './components/LoginPage';
 import ImportDocsTab from './components/ImportDocsTab';
 import { colors, spacing, typography, borderRadius } from './styles';
+import { supabase } from '../lib/supabaseClient';
 
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -20,9 +21,21 @@ const App: React.FC = () => {
     setIsLoggedIn(true);
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
     setIsLoggedIn(false);
   };
+
+  // Check for existing session on app load
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setIsLoggedIn(true);
+      }
+    };
+    checkSession();
+  }, []);
 
   const tabs = [
     { id: 'chat', label: 'Copilot Chat', icon: '🤖' },

@@ -8,7 +8,6 @@
   "networkAccess": {
     "allowedDomains": [
       "http://localhost:3000",
-      "http://localhost:3001",
       "https://*.supabase.co",
       "https://ddojfdecbnlxbeyvylqp.supabase.co"
     ],

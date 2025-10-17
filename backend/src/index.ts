@@ -17,7 +17,23 @@ declare global {
 }
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: './.env' });
+
+// Text chunking function
+const chunkText = (text: string, chunkSize: number = 800, overlap: number = 200): string[] => {
+  const words = text.split(/\s+/);
+  const chunks: string[] = [];
+  let start = 0;
+  
+  while (start < words.length) {
+    const end = Math.min(start + chunkSize, words.length);
+    const chunk = words.slice(start, end).join(' ');
+    chunks.push(chunk);
+    start += chunkSize - overlap;
+  }
+  
+  return chunks;
+};
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -36,10 +52,10 @@ app.use("/ask-question", askQuestionRouter);
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 100 * 1024 * 1024, // 100MB limit for massive PDFs
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
+    if (file.mimetype === 'application/pdf' || file.originalname.endsWith('.pdf')) {
       cb(null, true);
     } else {
       cb(new Error('Only PDF files are allowed'));
@@ -50,7 +66,7 @@ const upload = multer({
 // Enable CORS for Figma plugin
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
@@ -67,7 +83,18 @@ const authenticateUser = async (req: Request, res: Response, next: any) => {
     return res.status(401).json({ error: 'Authentication required' });
   }
   
-  const { data: { user }, error } = await supabase.auth.getUser(token);
+  // Check if Supabase is properly configured
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
+    return res.status(503).json({ 
+      error: 'Authentication service not configured. Please set SUPABASE_URL and SUPABASE_KEY environment variables.' 
+    });
+  }
+  
+  // Create Supabase client for authentication
+  const { createClient } = require('@supabase/supabase-js');
+  const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+  
+  const { data: { user }, error } = await supabaseClient.auth.getUser(token);
   
   if (error || !user) {
     return res.status(401).json({ error: 'Invalid or expired token' });
@@ -77,7 +104,7 @@ const authenticateUser = async (req: Request, res: Response, next: any) => {
   next();
 };
 
-// Apply to all /api routes
+// Apply authentication to all /api routes
 app.use('/api', authenticateUser);
 
 // Hello World endpoint
@@ -198,42 +225,78 @@ app.post('/api/upload-pdf', upload.array('files', 5), async (req: Request, res: 
       return res.status(400).json({ error: 'No files uploaded' });
     }
 
-    // In a real app, you would use a PDF parsing library like pdf-parse
-    // For now, we'll simulate the processing
-    const processedFiles = files.map(file => ({
-      name: file.originalname,
-      size: file.size,
-      extractedText: `[Simulated extracted text from ${file.originalname}]\n\nThis would contain the actual text content extracted from the PDF file. In a real implementation, you would use a library like pdf-parse to extract text content and then parse it to identify different sections like:\n\n• Best Practices\n• Accessibility Standards\n• Brand Guidelines\n• Design System\n• UX Principles\n• Technical Requirements\n\nThe extracted content would then be used to auto-populate the design standards form fields.`,
-      sections: {
-        bestPractices: 'Extracted best practices content would appear here',
-        accessibilityStandards: 'Extracted accessibility standards would appear here',
-        brandGuidelines: 'Extracted brand guidelines would appear here',
-        designSystem: 'Extracted design system content would appear here',
-        userExperiencePrinciples: 'Extracted UX principles would appear here',
-        technicalRequirements: 'Extracted technical requirements would appear here',
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const processedFiles = [];
+    let totalChunks = 0;
+
+    for (const file of files) {
+      try {
+        // Extract text from PDF (simplified for now - in production use pdf-parse)
+        const extractedText = `[Extracted text from ${file.originalname}]\n\nThis is a placeholder for actual PDF text extraction. In production, you would use a library like pdf-parse to extract the actual text content from the PDF file. The extracted text would then be chunked and converted to embeddings for vector storage.`;
+        
+        // Chunk the text
+        const chunks = chunkText(extractedText, 800, 200);
+        
+        // Create embeddings and store in database
+        for (let i = 0; i < chunks.length; i++) {
+          try {
+            // Create embedding for this chunk
+            const embeddingRes = await openai.embeddings.create({
+              model: "text-embedding-3-small",
+              input: chunks[i]
+            });
+
+            // Store in Supabase if configured
+            if (supabase) {
+              await supabase.from("documents").insert({
+                user_id: userId,
+                filename: file.originalname,
+                file_size: file.size,
+                content: chunks[i],
+                embedding: embeddingRes.data[0].embedding,
+                metadata: { 
+                  chunk_index: i,
+                  total_chunks: chunks.length,
+                  file_type: 'pdf'
+                }
+              });
+            }
+            
+            totalChunks++;
+          } catch (embeddingError) {
+            console.error('Error creating embedding for chunk:', embeddingError);
+            // Continue with other chunks even if one fails
+          }
+        }
+
+        processedFiles.push({
+          name: file.originalname,
+          size: file.size,
+          chunks: chunks.length,
+          status: 'processed'
+        });
+
+      } catch (fileError: any) {
+        console.error(`Error processing file ${file.originalname}:`, fileError);
+        processedFiles.push({
+          name: file.originalname,
+          size: file.size,
+          chunks: 0,
+          status: 'error',
+          error: fileError.message || 'Unknown error'
+        });
       }
-    }));
+    }
 
     res.json({
       message: `Successfully processed ${files.length} PDF file(s)`,
       files: processedFiles,
-      extractedContent: processedFiles.reduce((acc, file) => {
-        return {
-          bestPractices: acc.bestPractices + (file.sections.bestPractices ? `\n\nFrom ${file.name}:\n${file.sections.bestPractices}` : ''),
-          accessibilityStandards: acc.accessibilityStandards + (file.sections.accessibilityStandards ? `\n\nFrom ${file.name}:\n${file.sections.accessibilityStandards}` : ''),
-          brandGuidelines: acc.brandGuidelines + (file.sections.brandGuidelines ? `\n\nFrom ${file.name}:\n${file.sections.brandGuidelines}` : ''),
-          designSystem: acc.designSystem + (file.sections.designSystem ? `\n\nFrom ${file.name}:\n${file.sections.designSystem}` : ''),
-          userExperiencePrinciples: acc.userExperiencePrinciples + (file.sections.userExperiencePrinciples ? `\n\nFrom ${file.name}:\n${file.sections.userExperiencePrinciples}` : ''),
-          technicalRequirements: acc.technicalRequirements + (file.sections.technicalRequirements ? `\n\nFrom ${file.name}:\n${file.sections.technicalRequirements}` : ''),
-        };
-      }, {
-        bestPractices: '',
-        accessibilityStandards: '',
-        brandGuidelines: '',
-        designSystem: '',
-        userExperiencePrinciples: '',
-        technicalRequirements: '',
-      })
+      totalChunks: totalChunks,
+      vectorStorage: supabase ? 'enabled' : 'disabled'
     });
 
   } catch (error: any) {

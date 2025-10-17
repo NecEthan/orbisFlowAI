@@ -15,6 +15,10 @@ export async function askQuestion(req: Request, res: Response) {
     });
     const queryEmbedding = embeddingRes.data[0].embedding;
 
+    if (!supabase) {
+      return res.status(503).json({ error: 'Database not configured' });
+    }
+    
     const { data: docs, error } = await supabase.rpc("match_documents", {
       query_embedding: queryEmbedding,
       match_threshold: 0.7,

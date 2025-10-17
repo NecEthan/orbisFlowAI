@@ -43,6 +43,11 @@ export async function uploadDocument(req: any, res: Response) {
         input: chunks[i]
       });
 
+      if (!supabase) {
+        console.log('Supabase not configured, skipping database insert');
+        return;
+      }
+      
       await supabase.from("documents").insert({
         user_id: userId,
         filename: req.file.originalname,
