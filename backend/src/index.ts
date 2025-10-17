@@ -241,7 +241,36 @@ app.post('/api/upload-pdf', upload.array('files', 5), async (req: Request, res: 
         // Chunk the text
         const chunks = chunkText(extractedText, 800, 200);
         
-        // Create embeddings and store in database
+        // Create Supabase client for database operations
+        const { createClient } = require('@supabase/supabase-js');
+        const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+        
+        // First, create document record (once per file)
+        let documentId = null;
+        if (supabaseClient) {
+          const { data: docData, error: docError } = await supabaseClient
+            .from("documents")
+            .insert({
+              user_id: userId,
+              filename: file.originalname,
+              file_size: file.size,
+              metadata: { 
+                total_chunks: chunks.length,
+                file_type: 'pdf'
+              }
+            })
+            .select()
+            .single();
+          
+          if (docError) {
+            console.error('Error creating document record:', docError);
+            throw new Error(`Failed to create document: ${docError.message}`);
+          }
+          
+          documentId = docData.id;
+        }
+        
+        // Create embeddings and store chunks in database
         for (let i = 0; i < chunks.length; i++) {
           try {
             // Create embedding for this chunk
@@ -250,23 +279,28 @@ app.post('/api/upload-pdf', upload.array('files', 5), async (req: Request, res: 
               input: chunks[i]
             });
 
-            // Store in Supabase if configured
-            if (supabase) {
-              await supabase.from("documents").insert({
-                user_id: userId,
-                filename: file.originalname,
-                file_size: file.size,
-                content: chunks[i],
-                embedding: embeddingRes.data[0].embedding,
-                metadata: { 
+            // Store chunk in Supabase if configured
+            if (supabaseClient && documentId) {
+              const { error: chunkError } = await supabaseClient
+                .from("document_chunks")
+                .insert({
+                  document_id: documentId,
+                  user_id: userId,
+                  content: chunks[i],
+                  embedding: embeddingRes.data[0].embedding,
                   chunk_index: i,
-                  total_chunks: chunks.length,
-                  file_type: 'pdf'
-                }
-              });
+                  metadata: { 
+                    file_type: 'pdf'
+                  }
+                });
+              
+              if (chunkError) {
+                console.error('Error storing chunk:', chunkError);
+                // Continue with other chunks even if one fails
+              } else {
+                totalChunks++;
+              }
             }
-            
-            totalChunks++;
           } catch (embeddingError) {
             console.error('Error creating embedding for chunk:', embeddingError);
             // Continue with other chunks even if one fails
@@ -277,7 +311,8 @@ app.post('/api/upload-pdf', upload.array('files', 5), async (req: Request, res: 
           name: file.originalname,
           size: file.size,
           chunks: chunks.length,
-          status: 'processed'
+          status: 'processed',
+          documentId: documentId
         });
 
       } catch (fileError: any) {
@@ -296,7 +331,7 @@ app.post('/api/upload-pdf', upload.array('files', 5), async (req: Request, res: 
       message: `Successfully processed ${files.length} PDF file(s)`,
       files: processedFiles,
       totalChunks: totalChunks,
-      vectorStorage: supabase ? 'enabled' : 'disabled'
+      vectorStorage: (process.env.SUPABASE_URL && process.env.SUPABASE_KEY) ? 'enabled' : 'disabled'
     });
 
   } catch (error: any) {
