@@ -298,6 +298,227 @@ The response should be ready to send directly to stakeholders. Format it as a pr
   }
 });
 
+// Jira ticket generation endpoint
+app.post('/api/generate-jira-ticket', async (req: Request, res: Response) => {
+  try {
+    const { input, useDesignStandards = false } = req.body;
+
+    if (!input || typeof input !== 'string') {
+      return res.status(400).json({ error: 'Input text is required' });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: 'OpenAI API key not configured' });
+    }
+
+    // Get design standards if requested
+    let designStandardsContext = '';
+    if (useDesignStandards) {
+      // In a real app, this would load from database
+      // For now, we'll use a placeholder
+      designStandardsContext = '\n\nDesign Standards Context: Use company design standards and best practices when generating ticket content.';
+    }
+
+    const systemPrompt = `You are an AI assistant that helps create well-structured Jira tickets from design feedback, bug reports, or feature requirements.
+
+Your task is to generate a comprehensive Jira ticket with the following structure:
+- Title: Clear, concise summary of the issue/requirement
+- Description: Detailed explanation with context, steps to reproduce (for bugs), or requirements (for features)
+- Priority: Low, Medium, High, or Critical based on impact and urgency
+- Type: Bug, Task, Story, or Epic based on the nature of the work
+- Labels: Relevant tags for categorization
+- Project: Default to "DES" for design-related tickets
+
+Guidelines:
+- Use clear, professional language
+- Include specific details and context
+- For bugs: include steps to reproduce, expected vs actual behavior
+- For features: include user stories, acceptance criteria, and business value
+- Prioritize based on user impact and business value
+- Use appropriate labels for easy filtering and organization
+
+${designStandardsContext}
+
+Return your response as a JSON object with the following structure:
+{
+  "title": "Clear, descriptive title",
+  "description": "Detailed description with context and requirements",
+  "priority": "Low|Medium|High|Critical",
+  "type": "Bug|Task|Story|Epic",
+  "labels": "comma-separated,relevant,labels",
+  "assignee": "",
+  "project": "DES"
+}`;
+
+    const completion = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { 
+          role: 'user', 
+          content: `Please generate a Jira ticket for: "${input}"` 
+        }
+      ],
+      max_tokens: 800,
+      temperature: 0.7,
+    });
+
+    const response = completion.choices[0]?.message?.content || '{}';
+    
+    try {
+      const ticket = JSON.parse(response);
+      res.json({ 
+        ticket: ticket,
+        usage: completion.usage 
+      });
+    } catch (parseError) {
+      // Fallback if JSON parsing fails
+      res.json({ 
+        ticket: {
+          title: input.substring(0, 100) + (input.length > 100 ? '...' : ''),
+          description: response,
+          priority: 'Medium',
+          type: 'Task',
+          labels: 'design,ai-generated',
+          assignee: '',
+          project: 'DES'
+        },
+        usage: completion.usage 
+      });
+    }
+
+  } catch (error: any) {
+    console.error('Jira Ticket Generation Error:', error);
+    
+    if (error.code === 'insufficient_quota') {
+      return res.status(402).json({ error: 'OpenAI API quota exceeded' });
+    } else if (error.code === 'invalid_api_key') {
+      return res.status(401).json({ error: 'Invalid OpenAI API key' });
+    } else if (error.code === 'rate_limit_exceeded') {
+      return res.status(429).json({ error: 'Rate limit exceeded. Please try again later.' });
+    } else {
+      return res.status(500).json({ error: 'Failed to generate Jira ticket' });
+    }
+  }
+});
+
+// Meeting summary endpoint
+app.post('/api/summarize-meeting', async (req: Request, res: Response) => {
+  try {
+    const { transcript, useDesignStandards = false } = req.body;
+
+    if (!transcript || typeof transcript !== 'string') {
+      return res.status(400).json({ error: 'Meeting transcript is required' });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: 'OpenAI API key not configured' });
+    }
+
+    // Get design standards if requested
+    let designStandardsContext = '';
+    if (useDesignStandards) {
+      // In a real app, this would load from database
+      // For now, we'll use a placeholder
+      designStandardsContext = '\n\nDesign Standards Context: Use company design standards and best practices when analyzing design-related discussions.';
+    }
+
+    const systemPrompt = `You are an AI assistant that analyzes meeting transcripts and creates structured summaries.
+
+Your task is to extract and organize the following information from the meeting transcript:
+- Key decisions made during the meeting
+- Action items with owners and due dates (if mentioned)
+- Design-related discussion points and decisions
+- Follow-up tasks and next steps
+- Meeting attendees (if mentioned)
+- Meeting date and duration (if mentioned)
+
+Guidelines:
+- Be concise but comprehensive
+- Extract specific, actionable items
+- Identify design decisions and their rationale
+- Note any deadlines or time-sensitive items
+- Organize information logically
+- Use clear, professional language
+
+${designStandardsContext}
+
+Return your response as a JSON object with the following structure:
+{
+  "keyDecisions": ["Decision 1", "Decision 2", ...],
+  "actionItems": [
+    {
+      "task": "Specific action item",
+      "owner": "Person responsible (if mentioned)",
+      "dueDate": "Due date (if mentioned)"
+    }
+  ],
+  "designDiscussion": ["Design point 1", "Design point 2", ...],
+  "followUpTasks": ["Task 1", "Task 2", ...],
+  "attendees": ["Person 1", "Person 2", ...],
+  "meetingDate": "Date if mentioned, otherwise today's date",
+  "duration": "Duration if mentioned, otherwise 'Not specified'"
+}`;
+
+    const completion = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { 
+          role: 'user', 
+          content: `Please analyze this meeting transcript and create a structured summary:\n\n${transcript}` 
+        }
+      ],
+      max_tokens: 1200,
+      temperature: 0.7,
+    });
+
+    const response = completion.choices[0]?.message?.content || '{}';
+    
+    try {
+      const summary = JSON.parse(response);
+      res.json({ 
+        summary: summary,
+        usage: completion.usage 
+      });
+    } catch (parseError) {
+      // Fallback if JSON parsing fails
+      const today = new Date().toLocaleDateString();
+      res.json({ 
+        summary: {
+          keyDecisions: ["Meeting decisions extracted from transcript"],
+          actionItems: [
+            {
+              task: "Review meeting transcript for specific action items",
+              owner: "Not specified",
+              dueDate: "Not specified"
+            }
+          ],
+          designDiscussion: ["Design-related discussions from the meeting"],
+          followUpTasks: ["Follow-up tasks identified in the meeting"],
+          attendees: ["Meeting attendees"],
+          meetingDate: today,
+          duration: "Not specified"
+        },
+        usage: completion.usage 
+      });
+    }
+
+  } catch (error: any) {
+    console.error('Meeting Summary Error:', error);
+    
+    if (error.code === 'insufficient_quota') {
+      return res.status(402).json({ error: 'OpenAI API quota exceeded' });
+    } else if (error.code === 'invalid_api_key') {
+      return res.status(401).json({ error: 'Invalid OpenAI API key' });
+    } else if (error.code === 'rate_limit_exceeded') {
+      return res.status(429).json({ error: 'Rate limit exceeded. Please try again later.' });
+    } else {
+      return res.status(500).json({ error: 'Failed to summarize meeting' });
+    }
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
   console.log(`OpenAI model: ${process.env.OPENAI_MODEL || 'gpt-4'}`);
