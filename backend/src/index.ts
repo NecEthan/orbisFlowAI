@@ -3,6 +3,8 @@ import { Request, Response } from 'express';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 import multer from 'multer';
+import uploadDocsRouter from './routes/upload-docs';
+import askQuestionRouter from './routes/ask';
 
 // Load environment variables
 dotenv.config();
@@ -16,6 +18,9 @@ const openai = new OpenAI({
 });
 
 app.use(express.json());
+
+app.use("/upload-docs", uploadDocsRouter);
+app.use("/ask-question", askQuestionRouter);
 
 // Configure multer for file uploads
 const upload = multer({
