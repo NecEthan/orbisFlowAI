@@ -103,13 +103,29 @@ const ManageFeedbackTab: React.FC = () => {
       display: 'flex', 
       flexDirection: 'column', 
       height: '100%',
-      backgroundColor: colors.background,
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      position: 'relative',
     }}>
+      {/* Background overlay for content readability */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        zIndex: 1,
+      }} />
+      
       {/* Section Navigation */}
       <div style={{ 
         display: 'flex',
-        borderBottom: `1px solid ${colors.border}`,
-        backgroundColor: colors.white,
+        borderBottom: `1px solid rgba(102, 126, 234, 0.2)`,
+        background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)',
+        backdropFilter: 'blur(20px)',
+        position: 'relative',
+        zIndex: 2,
       }}>
         {[
           { id: 'response', label: 'Response Generator', icon: '💬' },
@@ -123,15 +139,21 @@ const ManageFeedbackTab: React.FC = () => {
               ...buttonStyles.secondary,
               border: 'none',
               borderRadius: 0,
-              borderBottom: activeSection === section.id ? `2px solid ${colors.primary}` : '2px solid transparent',
-              backgroundColor: activeSection === section.id ? colors.backgroundSecondary : 'transparent',
-              color: activeSection === section.id ? colors.primary : colors.textSecondary,
+              borderBottom: activeSection === section.id ? `3px solid #667eea` : '3px solid transparent',
+              background: activeSection === section.id 
+                ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)'
+                : 'transparent',
+              color: activeSection === section.id ? '#667eea' : colors.textSecondary,
               flex: 1,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: spacing.xs,
               fontSize: typography.fontSize.sm,
+              fontWeight: activeSection === section.id ? typography.fontWeight.semibold : typography.fontWeight.medium,
+              transition: 'all 0.3s ease',
+              position: 'relative',
+              overflow: 'hidden',
             }}
           >
             <span>{section.icon}</span>
@@ -141,22 +163,37 @@ const ManageFeedbackTab: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 2 }}>
         {activeSection === 'response' && (
-          <div style={{ padding: spacing.md, display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+          <div style={{ 
+            padding: spacing.lg, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: spacing.lg,
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '20px 20px 0 0',
+            margin: '0 10px',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderBottom: 'none',
+          }}>
             <div>
               <h3 style={{ 
                 margin: `0 0 ${spacing.sm} 0`,
-                fontSize: typography.fontSize.md,
-                fontWeight: typography.fontWeight.semibold,
-                color: colors.textPrimary,
+                fontSize: typography.fontSize.lg,
+                fontWeight: typography.fontWeight.bold,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
               }}>
-                Generate Professional Response
+                ✨ Generate Professional Response
               </h3>
               <p style={{ 
                 margin: 0,
                 fontSize: typography.fontSize.sm,
                 color: colors.textSecondary,
+                opacity: 0.8,
               }}>
                 Paste stakeholder feedback below to generate a respectful, professional response.
               </p>
@@ -178,9 +215,23 @@ const ManageFeedbackTab: React.FC = () => {
                 placeholder="Paste the feedback comment here..."
                 style={{
                   ...inputStyles.base,
-                  minHeight: '80px',
+                  minHeight: '100px',
                   resize: 'vertical',
                   fontFamily: typography.fontFamily,
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  border: '2px solid rgba(102, 126, 234, 0.2)',
+                  borderRadius: '12px',
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 15px rgba(102, 126, 234, 0.1)',
+                }}
+                onFocus={(e) => {
+                  e.target.style.border = '2px solid #667eea';
+                  e.target.style.boxShadow = '0 4px 20px rgba(102, 126, 234, 0.2)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.border = '2px solid rgba(102, 126, 234, 0.2)';
+                  e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.1)';
                 }}
               />
             </div>
@@ -195,6 +246,31 @@ const ManageFeedbackTab: React.FC = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: spacing.sm,
+                background: isGenerating 
+                  ? 'linear-gradient(135deg, #a8a8a8 0%, #888888 100%)'
+                  : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none',
+                borderRadius: '12px',
+                padding: `${spacing.md} ${spacing.lg}`,
+                fontSize: typography.fontSize.md,
+                fontWeight: typography.fontWeight.semibold,
+                color: 'white',
+                boxShadow: '0 6px 20px rgba(102, 126, 234, 0.3)',
+                transition: 'all 0.3s ease',
+                transform: 'translateY(0)',
+                cursor: isGenerating ? 'not-allowed' : 'pointer',
+              }}
+              onMouseEnter={(e) => {
+                if (!isGenerating) {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isGenerating) {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.3)';
+                }
               }}
             >
               {isGenerating ? (
@@ -213,20 +289,26 @@ const ManageFeedbackTab: React.FC = () => {
             {error && (
               <div style={{
                 ...cardStyles.base,
-                backgroundColor: '#FEF2F2',
-                border: `1px solid ${colors.error}`,
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%)',
+                border: '2px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 4px 15px rgba(239, 68, 68, 0.1)',
               }}>
                 <div style={{ 
                   fontSize: typography.fontSize.sm,
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.error,
+                  fontWeight: typography.fontWeight.semibold,
+                  color: '#DC2626',
                   marginBottom: spacing.sm,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.xs,
                 }}>
-                  Error:
+                  ⚠️ Error:
                 </div>
                 <div style={{
                   fontSize: typography.fontSize.sm,
-                  color: colors.error,
+                  color: '#DC2626',
                   lineHeight: typography.lineHeight.normal,
                 }}>
                   {error}
@@ -237,21 +319,32 @@ const ManageFeedbackTab: React.FC = () => {
             {generatedResponse && (
               <div style={{
                 ...cardStyles.base,
-                backgroundColor: colors.backgroundSecondary,
+                background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+                border: '2px solid rgba(34, 197, 94, 0.3)',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 4px 15px rgba(34, 197, 94, 0.1)',
               }}>
                 <div style={{ 
                   fontSize: typography.fontSize.sm,
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.textPrimary,
+                  fontWeight: typography.fontWeight.semibold,
+                  color: '#059669',
                   marginBottom: spacing.sm,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.xs,
                 }}>
-                  Generated Response:
+                  ✨ Generated Response:
                 </div>
                 <div style={{
                   fontSize: typography.fontSize.sm,
                   color: colors.textSecondary,
                   lineHeight: typography.lineHeight.normal,
                   whiteSpace: 'pre-wrap',
+                  background: 'rgba(255, 255, 255, 0.5)',
+                  padding: spacing.md,
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
                 }}>
                   {generatedResponse}
                 </div>
@@ -261,6 +354,20 @@ const ManageFeedbackTab: React.FC = () => {
                     ...buttonStyles.secondary,
                     marginTop: spacing.sm,
                     fontSize: typography.fontSize.xs,
+                    background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+                    border: '1px solid rgba(34, 197, 94, 0.3)',
+                    borderRadius: '8px',
+                    color: '#059669',
+                    fontWeight: typography.fontWeight.medium,
+                    transition: 'all 0.3s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)';
+                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
                   📋 Copy to Clipboard
@@ -271,41 +378,94 @@ const ManageFeedbackTab: React.FC = () => {
         )}
 
         {activeSection === 'analytics' && (
-          <div style={{ padding: spacing.md, display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+          <div style={{ 
+            padding: spacing.lg, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: spacing.lg,
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '20px 20px 0 0',
+            margin: '0 10px',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderBottom: 'none',
+          }}>
             <h3 style={{ 
               margin: 0,
-              fontSize: typography.fontSize.md,
-              fontWeight: typography.fontWeight.semibold,
-              color: colors.textPrimary,
+              fontSize: typography.fontSize.lg,
+              fontWeight: typography.fontWeight.bold,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
             }}>
-              Feedback Analytics
+              📊 Feedback Analytics
             </h3>
 
             {/* Summary Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing.sm }}>
-              <div style={{ ...cardStyles.base, textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', fontWeight: typography.fontWeight.bold, color: colors.primary }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing.md }}>
+              <div style={{ 
+                ...cardStyles.base, 
+                textAlign: 'center',
+                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+                border: '2px solid rgba(102, 126, 234, 0.2)',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 4px 15px rgba(102, 126, 234, 0.1)',
+              }}>
+                <div style={{ 
+                  fontSize: '28px', 
+                  fontWeight: typography.fontWeight.bold, 
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>
                   {mockFeedbackAnalytics.totalComments}
                 </div>
-                <div style={{ fontSize: typography.fontSize.xs, color: colors.textSecondary }}>
+                <div style={{ fontSize: typography.fontSize.sm, color: colors.textSecondary, fontWeight: typography.fontWeight.medium }}>
                   Total Comments
                 </div>
               </div>
-              <div style={{ ...cardStyles.base, textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', fontWeight: typography.fontWeight.bold, color: colors.success }}>
+              <div style={{ 
+                ...cardStyles.base, 
+                textAlign: 'center',
+                background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+                border: '2px solid rgba(34, 197, 94, 0.2)',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 4px 15px rgba(34, 197, 94, 0.1)',
+              }}>
+                <div style={{ 
+                  fontSize: '28px', 
+                  fontWeight: typography.fontWeight.bold, 
+                  color: '#059669',
+                }}>
                   {mockFeedbackAnalytics.resolvedComments}
                 </div>
-                <div style={{ fontSize: typography.fontSize.xs, color: colors.textSecondary }}>
+                <div style={{ fontSize: typography.fontSize.sm, color: colors.textSecondary, fontWeight: typography.fontWeight.medium }}>
                   Resolved
                 </div>
               </div>
             </div>
 
-            <div style={{ ...cardStyles.base, textAlign: 'center' }}>
-              <div style={{ fontSize: '24px', fontWeight: typography.fontWeight.bold, color: colors.warning }}>
+            <div style={{ 
+              ...cardStyles.base, 
+              textAlign: 'center',
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%)',
+              border: '2px solid rgba(245, 158, 11, 0.2)',
+              borderRadius: '12px',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 15px rgba(245, 158, 11, 0.1)',
+            }}>
+              <div style={{ 
+                fontSize: '28px', 
+                fontWeight: typography.fontWeight.bold, 
+                color: '#D97706',
+              }}>
                 {mockFeedbackAnalytics.averageResponseTime}
               </div>
-              <div style={{ fontSize: typography.fontSize.xs, color: colors.textSecondary }}>
+              <div style={{ fontSize: typography.fontSize.sm, color: colors.textSecondary, fontWeight: typography.fontWeight.medium }}>
                 Avg Response Time
               </div>
             </div>
@@ -355,18 +515,39 @@ const ManageFeedbackTab: React.FC = () => {
         )}
 
         {activeSection === 'jira' && (
-          <div style={{ padding: spacing.md, display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+          <div style={{ 
+            padding: spacing.lg, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: spacing.lg,
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '20px 20px 0 0',
+            margin: '0 10px',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderBottom: 'none',
+          }}>
             <h3 style={{ 
               margin: 0,
-              fontSize: typography.fontSize.md,
-              fontWeight: typography.fontWeight.semibold,
-              color: colors.textPrimary,
+              fontSize: typography.fontSize.lg,
+              fontWeight: typography.fontWeight.bold,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
             }}>
-              Jira Integration
+              🎫 Jira Integration
             </h3>
 
             {/* Create Ticket Form */}
-            <div style={{ ...cardStyles.base }}>
+            <div style={{ 
+              ...cardStyles.base,
+              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+              border: '2px solid rgba(102, 126, 234, 0.2)',
+              borderRadius: '12px',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 4px 15px rgba(102, 126, 234, 0.1)',
+            }}>
               <h4 style={{ 
                 margin: `0 0 ${spacing.sm} 0`,
                 fontSize: typography.fontSize.sm,

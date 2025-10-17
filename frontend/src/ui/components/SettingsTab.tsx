@@ -52,18 +52,39 @@ const SettingsTab: React.FC = () => {
       display: 'flex', 
       flexDirection: 'column', 
       height: '100%',
-      backgroundColor: colors.background,
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      position: 'relative',
     }}>
+      {/* Background overlay for content readability */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        zIndex: 1,
+      }} />
       <div style={{ 
         flex: 1, 
         overflowY: 'auto', 
-        padding: spacing.md,
+        padding: spacing.lg,
         display: 'flex',
         flexDirection: 'column',
-        gap: spacing.md,
+        gap: spacing.lg,
+        position: 'relative',
+        zIndex: 2,
       }}>
         {/* Privacy Settings */}
-        <div style={{ ...cardStyles.base }}>
+        <div style={{ 
+          ...cardStyles.base,
+          background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+          border: '2px solid rgba(102, 126, 234, 0.2)',
+          borderRadius: '12px',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 4px 15px rgba(102, 126, 234, 0.1)',
+        }}>
           <h3 style={{ 
             margin: `0 0 ${spacing.md} 0`,
             fontSize: typography.fontSize.md,
@@ -221,7 +242,14 @@ const SettingsTab: React.FC = () => {
         </div>
 
         {/* Integrations */}
-        <div style={{ ...cardStyles.base }}>
+        <div style={{ 
+          ...cardStyles.base,
+          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+          border: '2px solid rgba(34, 197, 94, 0.2)',
+          borderRadius: '12px',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 4px 15px rgba(34, 197, 94, 0.1)',
+        }}>
           <h3 style={{ 
             margin: `0 0 ${spacing.md} 0`,
             fontSize: typography.fontSize.md,
@@ -285,7 +313,14 @@ const SettingsTab: React.FC = () => {
         </div>
 
         {/* Notifications */}
-        <div style={{ ...cardStyles.base }}>
+        <div style={{ 
+          ...cardStyles.base,
+          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+          border: '2px solid rgba(34, 197, 94, 0.2)',
+          borderRadius: '12px',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 4px 15px rgba(34, 197, 94, 0.1)',
+        }}>
           <h3 style={{ 
             margin: `0 0 ${spacing.md} 0`,
             fontSize: typography.fontSize.md,
@@ -355,7 +390,14 @@ const SettingsTab: React.FC = () => {
         </div>
 
         {/* Data Management */}
-        <div style={{ ...cardStyles.base }}>
+        <div style={{ 
+          ...cardStyles.base,
+          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+          border: '2px solid rgba(34, 197, 94, 0.2)',
+          borderRadius: '12px',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 4px 15px rgba(34, 197, 94, 0.1)',
+        }}>
           <h3 style={{ 
             margin: `0 0 ${spacing.md} 0`,
             fontSize: typography.fontSize.md,
@@ -403,7 +445,14 @@ const SettingsTab: React.FC = () => {
         </div>
 
         {/* About */}
-        <div style={{ ...cardStyles.base }}>
+        <div style={{ 
+          ...cardStyles.base,
+          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+          border: '2px solid rgba(34, 197, 94, 0.2)',
+          borderRadius: '12px',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 4px 15px rgba(34, 197, 94, 0.1)',
+        }}>
           <h3 style={{ 
             margin: `0 0 ${spacing.md} 0`,
             fontSize: typography.fontSize.md,

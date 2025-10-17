@@ -59,21 +59,39 @@ const ReviewDesignTab: React.FC = () => {
       display: 'flex', 
       flexDirection: 'column', 
       height: '100%',
-      backgroundColor: colors.background,
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      position: 'relative',
     }}>
+      {/* Background overlay for content readability */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        zIndex: 1,
+      }} />
       {/* Header */}
       <div style={{ 
-        padding: spacing.md,
-        borderBottom: `1px solid ${colors.border}`,
-        backgroundColor: colors.white,
+        padding: spacing.lg,
+        borderBottom: `1px solid rgba(102, 126, 234, 0.2)`,
+        background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)',
+        backdropFilter: 'blur(20px)',
+        position: 'relative',
+        zIndex: 2,
       }}>
         <h3 style={{ 
           margin: 0, 
           fontSize: typography.fontSize.lg, 
-          fontWeight: typography.fontWeight.semibold,
-          color: colors.textPrimary,
+          fontWeight: typography.fontWeight.bold,
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
         }}>
-          Design Review
+          🔍 Design Review
         </h3>
         <p style={{ 
           margin: `${spacing.xs} 0 0 0`,
@@ -94,6 +112,29 @@ const ReviewDesignTab: React.FC = () => {
             alignItems: 'center',
             justifyContent: 'center',
             gap: spacing.sm,
+            background: isRunning 
+              ? 'linear-gradient(135deg, #a8a8a8 0%, #888888 100%)'
+              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            border: 'none',
+            borderRadius: '12px',
+            fontWeight: typography.fontWeight.semibold,
+            color: 'white',
+            boxShadow: '0 6px 20px rgba(102, 126, 234, 0.3)',
+            transition: 'all 0.3s ease',
+            transform: 'translateY(0)',
+            cursor: isRunning ? 'not-allowed' : 'pointer',
+          }}
+          onMouseEnter={(e) => {
+            if (!isRunning) {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isRunning) {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.3)';
+            }
           }}
         >
           {isRunning ? (
@@ -114,10 +155,12 @@ const ReviewDesignTab: React.FC = () => {
       <div style={{ 
         flex: 1, 
         overflowY: 'auto', 
-        padding: spacing.md,
+        padding: spacing.lg,
         display: 'flex',
         flexDirection: 'column',
         gap: spacing.md,
+        position: 'relative',
+        zIndex: 2,
       }}>
         {results.length === 0 ? (
           <div style={{
@@ -125,6 +168,11 @@ const ReviewDesignTab: React.FC = () => {
             textAlign: 'center',
             padding: spacing.xl,
             color: colors.textSecondary,
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+            border: '2px solid rgba(102, 126, 234, 0.2)',
+            borderRadius: '12px',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.1)',
           }}>
             <div style={{ fontSize: '24px', marginBottom: spacing.sm }}>🔍</div>
             <p>No review results yet. Click "Run Design Review" to analyze your design.</p>
@@ -136,10 +184,33 @@ const ReviewDesignTab: React.FC = () => {
               style={{
                 ...cardStyles.base,
                 cursor: 'pointer',
-                border: selectedResult?.id === result.id ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
-                transition: 'border-color 0.2s ease',
+                background: selectedResult?.id === result.id 
+                  ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%)'
+                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                border: selectedResult?.id === result.id 
+                  ? `2px solid #667eea` 
+                  : `2px solid rgba(102, 126, 234, 0.2)`,
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)',
+                boxShadow: selectedResult?.id === result.id
+                  ? '0 6px 20px rgba(102, 126, 234, 0.2)'
+                  : '0 4px 15px rgba(102, 126, 234, 0.1)',
+                transition: 'all 0.3s ease',
+                transform: 'translateY(0)',
               }}
               onClick={() => setSelectedResult(result)}
+              onMouseEnter={(e) => {
+                if (selectedResult?.id !== result.id) {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.15)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (selectedResult?.id !== result.id) {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.1)';
+                }
+              }}
             >
               <div style={{ 
                 display: 'flex', 

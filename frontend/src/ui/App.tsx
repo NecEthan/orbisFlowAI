@@ -93,27 +93,45 @@ const App: React.FC = () => {
     <div style={{ 
       display: 'flex', 
       height: '100vh',
-      backgroundColor: colors.background,
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       fontFamily: typography.fontFamily,
+      position: 'relative',
     }}>
+      {/* Background overlay for content readability */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        zIndex: 1,
+      }} />
       {/* Sidebar */}
       <div style={{
         width: '200px',
-        backgroundColor: colors.white,
-        borderRight: `1px solid ${colors.border}`,
+        background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)',
+        borderRight: `1px solid rgba(102, 126, 234, 0.2)`,
         display: 'flex',
         flexDirection: 'column',
+        backdropFilter: 'blur(20px)',
+        position: 'relative',
+        zIndex: 2,
       }}>
         {/* Header */}
         <div style={{ 
-          padding: spacing.md,
-          borderBottom: `1px solid ${colors.border}`,
+          padding: spacing.lg,
+          borderBottom: `1px solid rgba(102, 126, 234, 0.2)`,
         }}>
           <h1 style={{ 
             margin: 0, 
-            fontSize: typography.fontSize.md, 
-            fontWeight: typography.fontWeight.semibold,
-            color: colors.textPrimary,
+            fontSize: typography.fontSize.lg, 
+            fontWeight: typography.fontWeight.bold,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
             display: 'flex',
             alignItems: 'center',
             gap: spacing.sm,
@@ -145,28 +163,34 @@ const App: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: spacing.sm,
-                padding: `${spacing.sm} ${spacing.md}`,
+                padding: `${spacing.md} ${spacing.lg}`,
                 border: 'none',
-                borderRadius: borderRadius.md,
-                backgroundColor: activeTab === tab.id ? colors.primary : 'transparent',
-                color: activeTab === tab.id ? colors.textInverse : colors.textSecondary,
+                borderRadius: '12px',
+                background: activeTab === tab.id 
+                  ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                  : 'transparent',
+                color: activeTab === tab.id ? 'white' : colors.textSecondary,
                 fontSize: typography.fontSize.sm,
-                fontWeight: typography.fontWeight.medium,
+                fontWeight: activeTab === tab.id ? typography.fontWeight.semibold : typography.fontWeight.medium,
                 cursor: 'pointer',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.3s ease',
                 textAlign: 'left',
                 width: '100%',
+                boxShadow: activeTab === tab.id ? '0 4px 15px rgba(102, 126, 234, 0.3)' : 'none',
+                transform: 'translateY(0)',
               }}
               onMouseEnter={(e) => {
                 if (activeTab !== tab.id) {
-                  e.currentTarget.style.backgroundColor = colors.backgroundSecondary;
-                  e.currentTarget.style.color = colors.textPrimary;
+                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)';
+                  e.currentTarget.style.color = '#667eea';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (activeTab !== tab.id) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.background = 'transparent';
                   e.currentTarget.style.color = colors.textSecondary;
+                  e.currentTarget.style.transform = 'translateY(0)';
                 }
               }}
             >
@@ -183,18 +207,24 @@ const App: React.FC = () => {
         display: 'flex', 
         flexDirection: 'column',
         overflow: 'hidden',
+        position: 'relative',
+        zIndex: 2,
       }}>
         {/* Content Header */}
         <div style={{ 
-          padding: `${spacing.md} ${spacing.lg}`,
-          borderBottom: `1px solid ${colors.border}`,
-          backgroundColor: colors.white,
+          padding: `${spacing.lg} ${spacing.lg}`,
+          borderBottom: `1px solid rgba(102, 126, 234, 0.2)`,
+          background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)',
+          backdropFilter: 'blur(20px)',
         }}>
           <h2 style={{ 
             margin: 0, 
             fontSize: typography.fontSize.lg, 
-            fontWeight: typography.fontWeight.semibold,
-            color: colors.textPrimary,
+            fontWeight: typography.fontWeight.bold,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
             display: 'flex',
             alignItems: 'center',
             gap: spacing.sm,

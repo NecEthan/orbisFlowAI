@@ -93,8 +93,20 @@ const CopilotChatTab: React.FC = () => {
       display: 'flex', 
       flexDirection: 'column', 
       height: '100%',
-      backgroundColor: colors.background,
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      position: 'relative',
     }}>
+      {/* Background overlay for content readability */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        zIndex: 1,
+      }} />
       <style>
         {`
           @keyframes typing {
@@ -113,10 +125,12 @@ const CopilotChatTab: React.FC = () => {
       <div style={{ 
         flex: 1, 
         overflowY: 'auto', 
-        padding: spacing.md,
+        padding: spacing.lg,
         display: 'flex',
         flexDirection: 'column',
         gap: spacing.md,
+        position: 'relative',
+        zIndex: 2,
       }}>
         {messages.map((message) => (
           <div
@@ -130,14 +144,24 @@ const CopilotChatTab: React.FC = () => {
             <div
               style={{
                 maxWidth: '80%',
-                padding: `${spacing.sm} ${spacing.md}`,
-                borderRadius: borderRadius.lg,
-                backgroundColor: message.type === 'user' ? colors.primary : colors.backgroundSecondary,
-                color: message.type === 'user' ? colors.textInverse : colors.textPrimary,
+                padding: `${spacing.md} ${spacing.lg}`,
+                borderRadius: '16px',
+                background: message.type === 'user' 
+                  ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)',
+                border: message.type === 'user' 
+                  ? 'none'
+                  : '2px solid rgba(102, 126, 234, 0.2)',
+                color: message.type === 'user' ? 'white' : colors.textPrimary,
                 fontSize: typography.fontSize.sm,
                 lineHeight: typography.lineHeight.normal,
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
+                backdropFilter: 'blur(10px)',
+                boxShadow: message.type === 'user'
+                  ? '0 4px 15px rgba(102, 126, 234, 0.3)'
+                  : '0 4px 15px rgba(102, 126, 234, 0.1)',
+                transition: 'all 0.3s ease',
               }}
             >
               {message.content}
@@ -167,14 +191,17 @@ const CopilotChatTab: React.FC = () => {
             <div
               style={{
                 maxWidth: '80%',
-                padding: `${spacing.sm} ${spacing.md}`,
-                borderRadius: borderRadius.lg,
-                backgroundColor: colors.backgroundSecondary,
+                padding: `${spacing.md} ${spacing.lg}`,
+                borderRadius: '16px',
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)',
+                border: '2px solid rgba(102, 126, 234, 0.2)',
                 color: colors.textPrimary,
                 fontSize: typography.fontSize.sm,
                 display: 'flex',
                 alignItems: 'center',
                 gap: spacing.xs,
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 4px 15px rgba(102, 126, 234, 0.1)',
               }}
             >
               <span>AI is thinking</span>
@@ -214,9 +241,12 @@ const CopilotChatTab: React.FC = () => {
 
       {/* Input Area */}
       <div style={{ 
-        padding: `${spacing.md} ${spacing.lg}`,
-        borderTop: `1px solid ${colors.border}`,
-        backgroundColor: colors.white,
+        padding: `${spacing.lg} ${spacing.lg}`,
+        borderTop: `1px solid rgba(102, 126, 234, 0.2)`,
+        background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)',
+        backdropFilter: 'blur(20px)',
+        position: 'relative',
+        zIndex: 2,
       }}>
         <div style={{ display: 'flex', gap: spacing.md, alignItems: 'flex-end' }}>
           <div style={{ flex: 1 }}>
@@ -239,7 +269,21 @@ const CopilotChatTab: React.FC = () => {
                 ...inputStyles.base,
                 width: '100%',
                 fontSize: typography.fontSize.sm,
-                padding: `${spacing.md} ${spacing.md}`,
+                padding: `${spacing.md} ${spacing.lg}`,
+                background: 'rgba(255, 255, 255, 0.9)',
+                border: '2px solid rgba(102, 126, 234, 0.2)',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 15px rgba(102, 126, 234, 0.1)',
+              }}
+              onFocus={(e) => {
+                e.target.style.border = '2px solid #667eea';
+                e.target.style.boxShadow = '0 4px 20px rgba(102, 126, 234, 0.2)';
+              }}
+              onBlur={(e) => {
+                e.target.style.border = '2px solid rgba(102, 126, 234, 0.2)';
+                e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.1)';
               }}
             />
           </div>
@@ -251,8 +295,29 @@ const CopilotChatTab: React.FC = () => {
               padding: `${spacing.md} ${spacing.lg}`,
               fontSize: typography.fontSize.sm,
               minWidth: '80px',
-              opacity: (!inputValue.trim() || isLoading) ? 0.6 : 1,
-              cursor: (!inputValue.trim() || isLoading) ? 'not-allowed' : 'pointer',
+              background: isLoading 
+                ? 'linear-gradient(135deg, #a8a8a8 0%, #888888 100%)'
+                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              border: 'none',
+              borderRadius: '12px',
+              fontWeight: typography.fontWeight.semibold,
+              color: 'white',
+              boxShadow: '0 6px 20px rgba(102, 126, 234, 0.3)',
+              transition: 'all 0.3s ease',
+              transform: 'translateY(0)',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              if (!isLoading) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isLoading) {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.3)';
+              }
             }}
           >
             {isLoading ? 'Sending...' : 'Send'}
