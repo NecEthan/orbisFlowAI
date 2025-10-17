@@ -11,6 +11,7 @@ import { colors, spacing, typography, borderRadius } from './styles';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('chat');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const tabs = [
     { id: 'chat', label: 'Copilot Chat', icon: '🤖' },
@@ -122,7 +123,7 @@ const App: React.FC = () => {
       }} />
       {/* Sidebar */}
       <div style={{
-        width: '200px',
+        width: sidebarCollapsed ? '60px' : '200px',
         background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)',
         borderRight: `1px solid rgba(102, 126, 234, 0.2)`,
         display: 'flex',
@@ -130,39 +131,95 @@ const App: React.FC = () => {
         backdropFilter: 'blur(20px)',
         position: 'relative',
         zIndex: 2,
+        transition: 'width 0.3s ease',
+        overflow: 'hidden',
       }}>
         {/* Header */}
         <div style={{ 
-          padding: spacing.lg,
+          padding: sidebarCollapsed ? spacing.sm : spacing.lg,
           borderBottom: `1px solid rgba(102, 126, 234, 0.2)`,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: sidebarCollapsed ? 'center' : 'flex-start',
         }}>
-          <h1 style={{ 
-            margin: 0, 
-            fontSize: typography.fontSize.lg, 
-            fontWeight: typography.fontWeight.bold,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
+          <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: spacing.sm,
+            justifyContent: sidebarCollapsed ? 'center' : 'space-between',
+            width: '100%',
           }}>
-            🎨 AI Copilot
-          </h1>
-          <p style={{ 
-            margin: `${spacing.xs} 0 0 0`,
-            fontSize: typography.fontSize.xs,
-            color: colors.textSecondary,
-          }}>
-            Your design assistant
-          </p>
+            {!sidebarCollapsed && (
+              <>
+                <h1 style={{ 
+                  margin: 0, 
+                  fontSize: typography.fontSize.lg, 
+                  fontWeight: typography.fontWeight.bold,
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.sm,
+                }}>
+                  🎨 AI Copilot
+                </h1>
+              </>
+            )}
+            {sidebarCollapsed && (
+              <div style={{
+                fontSize: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                🎨
+              </div>
+            )}
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              style={{
+                background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+                border: '1px solid rgba(102, 126, 234, 0.2)',
+                borderRadius: '8px',
+                padding: spacing.xs,
+                cursor: 'pointer',
+                fontSize: '14px',
+                color: '#667eea',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: '28px',
+                height: '28px',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%)';
+                e.currentTarget.style.transform = 'scale(1.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              {sidebarCollapsed ? '→' : '←'}
+            </button>
+          </div>
+          {!sidebarCollapsed && (
+            <p style={{ 
+              margin: `${spacing.xs} 0 0 0`,
+              fontSize: typography.fontSize.xs,
+              color: colors.textSecondary,
+            }}>
+              Your design assistant
+            </p>
+          )}
         </div>
 
         {/* Navigation */}
         <div style={{ 
           flex: 1,
-          padding: spacing.sm,
+          padding: sidebarCollapsed ? spacing.xs : spacing.sm,
           display: 'flex',
           flexDirection: 'column',
           gap: spacing.xs,
@@ -171,11 +228,12 @@ const App: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
+              title={sidebarCollapsed ? tab.label : undefined}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: spacing.sm,
-                padding: `${spacing.md} ${spacing.lg}`,
+                gap: sidebarCollapsed ? 0 : spacing.sm,
+                padding: sidebarCollapsed ? spacing.sm : `${spacing.md} ${spacing.lg}`,
                 border: 'none',
                 borderRadius: '12px',
                 background: activeTab === tab.id 
@@ -186,10 +244,12 @@ const App: React.FC = () => {
                 fontWeight: activeTab === tab.id ? typography.fontWeight.semibold : typography.fontWeight.medium,
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
-                textAlign: 'left',
+                textAlign: sidebarCollapsed ? 'center' : 'left',
                 width: '100%',
+                justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
                 boxShadow: activeTab === tab.id ? '0 4px 15px rgba(102, 126, 234, 0.3)' : 'none',
                 transform: 'translateY(0)',
+                minHeight: sidebarCollapsed ? '40px' : 'auto',
               }}
               onMouseEnter={(e) => {
                 if (activeTab !== tab.id) {
@@ -207,7 +267,7 @@ const App: React.FC = () => {
               }}
             >
               <span style={{ fontSize: '16px' }}>{tab.icon}</span>
-              {tab.label}
+              {!sidebarCollapsed && tab.label}
             </button>
           ))}
         </div>
