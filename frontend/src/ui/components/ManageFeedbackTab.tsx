@@ -8,6 +8,8 @@ const ManageFeedbackTab: React.FC = () => {
   const [generatedResponse, setGeneratedResponse] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [feedbackType, setFeedbackType] = useState<'subjective' | 'objective'>('subjective');
+  const [responseLength, setResponseLength] = useState<'short' | 'medium' | 'long'>('medium');
   const [newTicket, setNewTicket] = useState({
     title: '',
     description: '',
@@ -28,7 +30,9 @@ const ManageFeedbackTab: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          feedback: feedbackInput.trim()
+          feedback: feedbackInput.trim(),
+          feedbackType: feedbackType,
+          responseLength: responseLength
         }),
       });
 
@@ -234,6 +238,124 @@ const ManageFeedbackTab: React.FC = () => {
                   e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.1)';
                 }}
               />
+            </div>
+
+            {/* Response Options - Compact */}
+            <div style={{ display: 'flex', gap: spacing.md, alignItems: 'center' }}>
+              {/* Feedback Type Toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: spacing.xs }}>
+                <span style={{ 
+                  fontSize: typography.fontSize.xs,
+                  fontWeight: typography.fontWeight.medium,
+                  color: colors.textSecondary,
+                }}>
+                  Type:
+                </span>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {[
+                    { value: 'subjective', label: 'Subjective', icon: '🎨' },
+                    { value: 'objective', label: 'Objective', icon: '📋' }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setFeedbackType(option.value as 'subjective' | 'objective')}
+                      style={{
+                        padding: '4px 8px',
+                        border: `1px solid ${feedbackType === option.value ? '#667eea' : 'rgba(102, 126, 234, 0.2)'}`,
+                        borderRadius: '6px',
+                        background: feedbackType === option.value 
+                          ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)'
+                          : 'rgba(255, 255, 255, 0.5)',
+                        color: feedbackType === option.value ? '#667eea' : colors.textSecondary,
+                        fontSize: '11px',
+                        fontWeight: typography.fontWeight.medium,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: feedbackType === option.value 
+                          ? '0 1px 4px rgba(102, 126, 234, 0.2)'
+                          : '0 1px 2px rgba(102, 126, 234, 0.1)',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (feedbackType !== option.value) {
+                          e.currentTarget.style.background = 'rgba(102, 126, 234, 0.05)';
+                          e.currentTarget.style.border = '1px solid rgba(102, 126, 234, 0.3)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (feedbackType !== option.value) {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.5)';
+                          e.currentTarget.style.border = '1px solid rgba(102, 126, 234, 0.2)';
+                        }
+                      }}
+                    >
+                      <span style={{ fontSize: '12px' }}>{option.icon}</span>
+                      <span>{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Response Length Toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: spacing.xs }}>
+                <span style={{ 
+                  fontSize: typography.fontSize.xs,
+                  fontWeight: typography.fontWeight.medium,
+                  color: colors.textSecondary,
+                }}>
+                  Length:
+                </span>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {[
+                    { value: 'short', label: 'Short', icon: '📝' },
+                    { value: 'medium', label: 'Medium', icon: '📄' },
+                    { value: 'long', label: 'Long', icon: '📋' }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setResponseLength(option.value as 'short' | 'medium' | 'long')}
+                      style={{
+                        padding: '4px 8px',
+                        border: `1px solid ${responseLength === option.value ? '#667eea' : 'rgba(102, 126, 234, 0.2)'}`,
+                        borderRadius: '6px',
+                        background: responseLength === option.value 
+                          ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)'
+                          : 'rgba(255, 255, 255, 0.5)',
+                        color: responseLength === option.value ? '#667eea' : colors.textSecondary,
+                        fontSize: '11px',
+                        fontWeight: typography.fontWeight.medium,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: responseLength === option.value 
+                          ? '0 1px 4px rgba(102, 126, 234, 0.2)'
+                          : '0 1px 2px rgba(102, 126, 234, 0.1)',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (responseLength !== option.value) {
+                          e.currentTarget.style.background = 'rgba(102, 126, 234, 0.05)';
+                          e.currentTarget.style.border = '1px solid rgba(102, 126, 234, 0.3)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (responseLength !== option.value) {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.5)';
+                          e.currentTarget.style.border = '1px solid rgba(102, 126, 234, 0.2)';
+                        }
+                      }}
+                    >
+                      <span style={{ fontSize: '12px' }}>{option.icon}</span>
+                      <span>{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <button
