@@ -155,57 +155,80 @@ const DesignStandardsTab: React.FC = () => {
     setIsDragOver(false);
     
     const files = Array.from(e.dataTransfer.files);
-    const pdfFiles = files.filter(file => file.type === 'application/pdf');
+    const pdfFile = files.find(file => file.type === 'application/pdf');
     
-    if (pdfFiles.length === 0) {
-      setSaveMessage('Please upload PDF files only.');
+    if (!pdfFile) {
+      setSaveMessage('Please upload a PDF file.');
       setTimeout(() => setSaveMessage(null), 3000);
       return;
     }
     
-    await processFiles(pdfFiles);
+    await processFiles(pdfFile);
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const pdfFiles = files.filter(file => file.type === 'application/pdf');
+    console.log('-------called-------');
+  
+  const file = e.target.files?.[0]; // Get first file directly
+  console.log('Selected file:', file);
+  
+  if (!file) {
+    setSaveMessage('Please select a file.');
+    setTimeout(() => setSaveMessage(null), 3000);
+    return;
+  }
     
-    if (pdfFiles.length === 0) {
-      setSaveMessage('Please select PDF files only.');
-      setTimeout(() => setSaveMessage(null), 3000);
-      return;
-    }
-    
-    await processFiles(pdfFiles);
+    await processFiles(file);
   };
 
-  const processFiles = async (files: File[]) => {
+  const processFiles = async (file: File) => {
+    console.log('processFiles', file);
     setIsProcessingFile(true);
     setSaveMessage(null);
     
+    // Check file size before processing
+    const maxSize = 500 * 1024 * 1024; // 500MB
+    if (file.size > maxSize) {
+      setSaveMessage(`❌ File is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 500MB.`);
+      setTimeout(() => setSaveMessage(null), 5000);
+      setIsProcessingFile(false);
+      return;
+    }
+    
+    // Warn for large files
+    if (file.size > 50 * 1024 * 1024) { // 50MB
+      setSaveMessage(`⚠️ Large file detected (${(file.size / 1024 / 1024).toFixed(1)}MB). Upload may take a while...`);
+    }
+    
     try {
       const formData = new FormData();
-      files.forEach(file => {
-        formData.append('files', file);
-      });
+        formData.append('file', file);
 
-      const response = await apiClient('/api/upload-pdf', {
-        method: 'POST',
-        body: formData,
-      });
+      // Add timeout handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 400000); // 400 second timeout
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to process PDF files');
-      }
+      try {
+        const response = await apiClient('/api/upload-pdf', {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal
+        });
 
-      const data = await response.json();
-      
-      setUploadedFiles(prev => [...prev, ...files]);
-      
-      // Auto-populate the form fields with extracted content
-      if (data.extractedContent) {
-        setStandards(prev => ({
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to process PDF file');
+        }
+
+        const data = await response.json();
+        
+        setUploadedFiles(prev => [...prev, file]);
+        
+        // Auto-populate the form fields with extracted content
+        if (data.extractedContent) {
+          setStandards(prev => ({
           bestPractices: prev.bestPractices + (data.extractedContent.bestPractices || ''),
           accessibilityStandards: prev.accessibilityStandards + (data.extractedContent.accessibilityStandards || ''),
           brandGuidelines: prev.brandGuidelines + (data.extractedContent.brandGuidelines || ''),
@@ -215,11 +238,21 @@ const DesignStandardsTab: React.FC = () => {
         }));
       }
       
-      setSaveMessage(`Successfully processed ${files.length} PDF file(s). Content extracted and auto-populated in the form fields below.`);
-      setTimeout(() => setSaveMessage(null), 5000);
+        setSaveMessage(`✅ PDF uploaded and processed by OpenAI! Vector Store ID: ${data.vectorStoreId}`);
+        setTimeout(() => setSaveMessage(null), 5000);
+        
+      } catch (timeoutError: any) {
+        clearTimeout(timeoutId);
+        if (timeoutError.name === 'AbortError') {
+          setSaveMessage(`⏰ Upload timed out after 400 seconds. The file might be too large or the server is slow.`);
+        } else {
+          setSaveMessage(`❌ Failed to process PDF file: ${timeoutError.message}`);
+        }
+        setTimeout(() => setSaveMessage(null), 5000);
+      }
       
     } catch (error: any) {
-      setSaveMessage(`Failed to process PDF files: ${error.message}`);
+      setSaveMessage(`❌ Failed to process PDF file: ${error.message}`);
       setTimeout(() => setSaveMessage(null), 3000);
     } finally {
       setIsProcessingFile(false);
@@ -324,7 +357,6 @@ const DesignStandardsTab: React.FC = () => {
                 backgroundClip: 'text',
                 marginBottom: spacing.xs,
               }}>
-                Design Standards
               </h3>
               <p style={{ 
                 margin: 0,
@@ -408,7 +440,6 @@ const DesignStandardsTab: React.FC = () => {
           <input
             type="file"
             accept=".pdf"
-            multiple
             onChange={handleFileSelect}
             style={{
               position: 'absolute',
@@ -438,10 +469,10 @@ const DesignStandardsTab: React.FC = () => {
               textAlign: 'center',
             }}>
               {isProcessingFile 
-                ? 'Processing PDF files...' 
-                : isDragOver 
-                  ? 'Drop PDF files here' 
-                  : 'Drag & drop PDF files or click to browse'
+                ? 'Processing PDF file...' 
+                : isDragOver
+                  ? 'Drop PDF file here' 
+                  : 'Drag & drop PDF file or click to browse'
               }
             </div>
             <div style={{ 
@@ -549,7 +580,7 @@ const DesignStandardsTab: React.FC = () => {
           )}
         </div>
 
-        {/* Action Buttons */}
+        Action Buttons
         <div style={{
           maxWidth: '1400px',
           margin: '0 auto',

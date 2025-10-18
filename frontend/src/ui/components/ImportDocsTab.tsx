@@ -26,12 +26,13 @@ const ImportDocsTab: React.FC = () => {
     const pdfFiles = files.filter(file => file.type === 'application/pdf');
     
     if (pdfFiles.length === 0) {
-      setSaveMessage('Please upload PDF files only.');
+      setSaveMessage('Please upload PDF file only.');
       setTimeout(() => setSaveMessage(null), 3000);
       return;
     }
     
-    await processFiles(pdfFiles);
+    // Process only the first file
+    await processFiles(pdfFiles[0]);
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,40 +40,71 @@ const ImportDocsTab: React.FC = () => {
     const pdfFiles = files.filter(file => file.type === 'application/pdf');
     
     if (pdfFiles.length === 0) {
-      setSaveMessage('Please select PDF files only.');
+      setSaveMessage('Please select PDF file only.');
       setTimeout(() => setSaveMessage(null), 3000);
       return;
     }
     
-    await processFiles(pdfFiles);
+    // Process only the first file
+    await processFiles(pdfFiles[0]);
   };
 
-  const processFiles = async (files: File[]) => {
+  const processFiles = async (file: File) => {
     setIsProcessingFile(true);
     setSaveMessage(null);
     
+    // Check file size before processing
+    const maxSize = 500 * 1024 * 1024; // 500MB
+    if (file.size > maxSize) {
+      setSaveMessage(`❌ File is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 500MB.`);
+      setTimeout(() => setSaveMessage(null), 5000);
+      setIsProcessingFile(false);
+      return;
+    }
+    
+    // Warn for large files
+    if (file.size > 50 * 1024 * 1024) { // 50MB
+      setSaveMessage(`⚠️ Large file detected (${(file.size / 1024 / 1024).toFixed(1)}MB). Upload may take a while...`);
+    }
+    
     try {
       const formData = new FormData();
-      files.forEach(file => {
-        formData.append('files', file);
-      });
+      formData.append('file', file);
 
-      const response = await apiClient('/api/upload-pdf', {
-        method: 'POST',
-        body: formData,
-      });
+      // Add timeout handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 400000); // 400 second timeout
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to process PDF files');
+      try {
+        const response = await apiClient('/api/upload-pdf', {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to process PDF files');
+        }
+
+        const data = await response.json();
+        
+        setUploadedFiles(prev => [...prev, file]);
+        
+        setSaveMessage(`Successfully processed PDF file. Document is now available for AI context.`);
+        setTimeout(() => setSaveMessage(null), 5000);
+        
+      } catch (timeoutError: any) {
+        clearTimeout(timeoutId);
+        if (timeoutError.name === 'AbortError') {
+          setSaveMessage(`⏰ Upload timed out after 400 seconds. The file might be too large or the server is slow.`);
+        } else {
+          setSaveMessage(`❌ Failed to process PDF file: ${timeoutError.message}`);
+        }
+        setTimeout(() => setSaveMessage(null), 5000);
       }
-
-      const data = await response.json();
-      
-      setUploadedFiles(prev => [...prev, ...files]);
-      
-      setSaveMessage(`Successfully processed ${files.length} PDF file(s). Documents are now available for AI context.`);
-      setTimeout(() => setSaveMessage(null), 5000);
       
     } catch (error: any) {
       setSaveMessage(`Failed to process PDF files: ${error.message}`);
@@ -140,7 +172,6 @@ const ImportDocsTab: React.FC = () => {
         <input
           type="file"
           accept=".pdf"
-          multiple
           onChange={handleFileSelect}
           style={{
             position: 'absolute',
@@ -170,10 +201,10 @@ const ImportDocsTab: React.FC = () => {
             textAlign: 'center',
           }}>
             {isProcessingFile 
-              ? 'Processing documents...' 
+              ? 'Processing document...' 
               : isDragOver 
-                ? 'Drop PDF files here' 
-                : 'Drag & drop PDF files or click to browse'
+                ? 'Drop PDF file here' 
+                : 'Drag & drop PDF file or click to browse'
             }
           </div>
           <div style={{ 
