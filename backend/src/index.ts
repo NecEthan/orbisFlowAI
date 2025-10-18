@@ -133,6 +133,72 @@ app.post("/api/upload-pdf", upload.single("file"), async (req: Request, res: Res
 });
 
 /**
+ * 📚 Get all stored PDFs from vector store
+ */
+app.get('/api/stored-pdfs', async (req: Request, res: Response) => {
+  try {
+    console.log("📚 Fetching stored PDFs from vector store...");
+
+    // In the stored-pdfs endpoint:
+    const response = await axios.get(`https://api.openai.com/v1/vector_stores/${VECTOR_STORE_ID}/files`, {
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const vectorStoreFiles = response.data;
+    console.log(`📄 Found ${vectorStoreFiles} files in vector store`);
+    
+    // Get detailed information about each file
+    const filesWithDetails = await Promise.all(
+      vectorStoreFiles.data.map(async (fileRef: any) => {
+        try {
+          const fileDetails = await openai.files.retrieve(fileRef.id);
+          return {
+            id: fileRef.id,
+            name: fileDetails.filename,
+            size: fileDetails.bytes,
+            createdAt: new Date(fileDetails.created_at * 1000).toISOString(),
+            purpose: fileDetails.purpose,
+            status: fileDetails.status,
+            vectorStoreId: VECTOR_STORE_ID
+          };
+        } catch (error) {
+          console.error(`❌ Error fetching details for file ${fileRef.id}:`, error);
+          return {
+            id: fileRef.id,
+            name: 'Unknown file',
+            size: 0,
+            createdAt: new Date().toISOString(),
+            purpose: 'unknown',
+            status: 'error',
+            vectorStoreId: VECTOR_STORE_ID,
+            error: 'Failed to fetch file details'
+          };
+        }
+      })
+    );
+    
+    res.json({
+      success: true,
+      message: `Found ${filesWithDetails.length} stored PDFs`,
+      vectorStoreId: VECTOR_STORE_ID,
+      files: filesWithDetails,
+      totalFiles: filesWithDetails.length
+    });
+    
+  } catch (error: any) {
+    console.error("❌ Error fetching stored PDFs:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch stored PDFs",
+      details: error.message
+    });
+  }
+});
+
+/**
  * 🧠 Test OpenAI connection
  */
 app.get("/test-openai", async (req, res) => {

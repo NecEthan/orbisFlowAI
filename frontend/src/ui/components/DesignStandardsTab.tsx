@@ -25,7 +25,9 @@ const DesignStandardsTab: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [storedPdfs, setStoredPdfs] = useState<any[]>([]);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const [isLoadingStoredPdfs, setIsLoadingStoredPdfs] = useState(false);
 
   // Load design standards on component mount
   useEffect(() => {
@@ -45,6 +47,39 @@ const DesignStandardsTab: React.FC = () => {
 
     loadStandards();
   }, []);
+
+  // Load stored PDFs on component mount
+  useEffect(() => {
+    const loadStoredPdfs = async () => {
+      setIsLoadingStoredPdfs(true);
+      try {
+        const response = await apiClient('/api/stored-pdfs');
+        if (response.ok) {
+          const data = await response.json();
+          setStoredPdfs(data.files || []);
+        }
+      } catch (error) {
+        console.error('Error loading stored PDFs:', error);
+      } finally {
+        setIsLoadingStoredPdfs(false);
+      }
+    };
+
+    loadStoredPdfs();
+  }, []);
+
+  // Function to refresh stored PDFs list
+  const refreshStoredPdfs = async () => {
+    try {
+      const response = await apiClient('/api/stored-pdfs');
+      if (response.ok) {
+        const data = await response.json();
+        setStoredPdfs(data.files || []);
+      }
+    } catch (error) {
+      console.error('Error refreshing stored PDFs:', error);
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -240,6 +275,9 @@ const DesignStandardsTab: React.FC = () => {
       
         setSaveMessage(`✅ PDF uploaded and processed by OpenAI! Vector Store ID: ${data.vectorStoreId}`);
         setTimeout(() => setSaveMessage(null), 5000);
+        
+        // Refresh the stored PDFs list
+        await refreshStoredPdfs();
         
       } catch (timeoutError: any) {
         clearTimeout(timeoutId);
@@ -484,6 +522,84 @@ const DesignStandardsTab: React.FC = () => {
             </div>
           </div>
           
+          {/* Stored PDFs from Database */}
+          {isLoadingStoredPdfs && (
+            <div style={{ marginTop: spacing.lg }}>
+              <div style={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing.sm,
+                color: colors.textSecondary,
+                fontSize: typography.fontSize.sm
+              }}>
+                <span>🔄</span>
+                Loading stored PDFs...
+              </div>
+            </div>
+          )}
+          
+          {!isLoadingStoredPdfs && storedPdfs.length > 0 && (
+            <div style={{ marginTop: spacing.lg }}>
+              <h4 style={{ 
+                margin: `0 0 ${spacing.md} 0`,
+                fontSize: typography.fontSize.md,
+                fontWeight: typography.fontWeight.semibold,
+                color: colors.textPrimary,
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing.sm,
+              }}>
+                <span>🗄️</span>
+                Stored in Database ({storedPdfs.length})
+              </h4>
+              <div style={{ 
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gap: spacing.sm,
+              }}>
+                {storedPdfs.map((pdf, index) => (
+                  <div
+                    key={pdf.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: spacing.md,
+                      backgroundColor: colors.backgroundSecondary,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: spacing.sm,
+                      gap: spacing.sm,
+                    }}
+                  >
+                    <span style={{ fontSize: '1.2em' }}>📄</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ 
+                        fontWeight: typography.fontWeight.medium,
+                        color: colors.textPrimary,
+                        marginBottom: spacing.xs,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {pdf.name}
+                      </div>
+                      <div style={{ 
+                        fontSize: typography.fontSize.sm,
+                        color: colors.textSecondary,
+                        display: 'flex',
+                        gap: spacing.sm,
+                        flexWrap: 'wrap'
+                      }}>
+                        <span>Size: {(pdf.size / 1024).toFixed(1)}KB</span>
+                        <span>•</span>
+                        <span>Status: {pdf.status}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Uploaded Files List */}
           {uploadedFiles.length > 0 && (
             <div style={{ marginTop: spacing.lg }}>
