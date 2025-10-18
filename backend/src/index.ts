@@ -2,11 +2,11 @@ import express from 'express';
 import { Request, Response } from 'express';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
-import multer from 'multer';
+// multer removed - no file uploads needed
 import uploadDocsRouter from './routes/upload-docs';
 import askQuestionRouter from './routes/ask';
 import { supabase } from './supabaseClient';
-const pdfPoppler = require('pdf-poppler');
+// PDF parsing removed - focusing on text processing only
 
 // Extend Request interface to include user
 declare global {
@@ -49,20 +49,7 @@ app.use(express.json());
 app.use("/upload-docs", uploadDocsRouter);
 app.use("/ask-question", askQuestionRouter);
 
-// Configure multer for file uploads
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB limit for massive PDFs
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf' || file.originalname.endsWith('.pdf')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF files are allowed'));
-    }
-  },
-});
+// File upload configuration removed - focusing on text input only
 
 // Enable CORS for Figma plugin
 app.use((req, res, next) => {
@@ -217,171 +204,12 @@ app.get('/api/design-standards', async (req: Request, res: Response) => {
   }
 });
 
-// PDF upload and processing endpoint
-app.post('/api/upload-pdf', upload.array('files', 5), async (req: Request, res: Response) => {
-  try {
-    const files = req.files as Express.Multer.File[];
-    
-    if (!files || files.length === 0) {
-      return res.status(400).json({ error: 'No files uploaded' });
-    }
-
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: 'User not authenticated' });
-    }
-
-    const processedFiles = [];
-    let totalChunks = 0;
-
-    for (const file of files) {
-      try {
-        // Extract text from PDF using pdf-poppler
-        let extractedText = '';
-        try {
-          // Create a temporary file for pdf-poppler
-          const fs = require('fs');
-          const path = require('path');
-          const os = require('os');
-          
-          const tempDir = os.tmpdir();
-          const tempFilePath = path.join(tempDir, `temp_${Date.now()}_${file.originalname}`);
-          
-          // Write buffer to temporary file
-          fs.writeFileSync(tempFilePath, file.buffer);
-          
-          // Configure pdf-poppler options
-          const options = {
-            format: 'txt',
-            out_dir: tempDir,
-            out_prefix: 'pdf_extract',
-            page: null // Extract all pages
-          };
-          
-          // Convert PDF to text
-          const result = await pdfPoppler.convert(tempFilePath, options);
-          
-          // Read the extracted text
-          const outputFile = path.join(tempDir, 'pdf_extract.txt');
-          if (fs.existsSync(outputFile)) {
-            extractedText = fs.readFileSync(outputFile, 'utf8');
-            fs.unlinkSync(outputFile); // Clean up
-          }
-          
-          // Clean up temp file
-          fs.unlinkSync(tempFilePath);
-          
-          if (!extractedText || extractedText.trim().length === 0) {
-            throw new Error('No text content found in PDF');
-          }
-          
-          console.log(`Extracted ${extractedText.length} characters from ${file.originalname}`);
-        } catch (pdfError: any) {
-          console.error(`PDF parsing error for ${file.originalname}:`, pdfError.message);
-          extractedText = `[Failed to extract text from ${file.originalname}. File may be image-based, corrupted, or password-protected.]`;
-        }
-        
-        // Chunk the text
-        const chunks = chunkText(extractedText, 800, 200);
-        
-        // Create Supabase client for database operations
-        const { createClient } = require('@supabase/supabase-js');
-        const supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-        
-        // First, create document record (once per file)
-        let documentId = null;
-        if (supabaseClient) {
-          const { data: docData, error: docError } = await supabaseClient
-            .from("documents")
-            .insert({
-              user_id: userId,
-              filename: file.originalname,
-              file_size: file.size,
-              metadata: { 
-                total_chunks: chunks.length,
-                file_type: 'pdf'
-              }
-            })
-            .select()
-            .single();
-          
-          if (docError) {
-            console.error('Error creating document record:', docError);
-            throw new Error(`Failed to create document: ${docError.message}`);
-          }
-          
-          documentId = docData.id;
-        }
-        
-        // Create embeddings and store chunks in database
-        for (let i = 0; i < chunks.length; i++) {
-          try {
-            // Create embedding for this chunk
-            const embeddingRes = await openai.embeddings.create({
-              model: "text-embedding-3-small",
-              input: chunks[i]
-            });
-
-            // Store chunk in Supabase if configured
-            if (supabaseClient && documentId) {
-              const { error: chunkError } = await supabaseClient
-                .from("document_chunks")
-                .insert({
-                  document_id: documentId,
-                  user_id: userId,
-                  content: chunks[i],
-                  embedding: embeddingRes.data[0].embedding,
-                  chunk_index: i,
-                  metadata: { 
-                    file_type: 'pdf'
-                  }
-                });
-              
-              if (chunkError) {
-                console.error('Error storing chunk:', chunkError);
-                // Continue with other chunks even if one fails
-              } else {
-                totalChunks++;
-              }
-            }
-          } catch (embeddingError) {
-            console.error('Error creating embedding for chunk:', embeddingError);
-            // Continue with other chunks even if one fails
-          }
-        }
-
-        processedFiles.push({
-          name: file.originalname,
-          size: file.size,
-          chunks: chunks.length,
-          status: 'processed',
-          documentId: documentId,
-          extractedChars: extractedText.length
-        });
-
-      } catch (fileError: any) {
-        console.error(`Error processing file ${file.originalname}:`, fileError);
-        processedFiles.push({
-          name: file.originalname,
-          size: file.size,
-          chunks: 0,
-          status: 'error',
-          error: fileError.message || 'Unknown error'
-        });
-      }
-    }
-
-    res.json({
-      message: `Successfully processed ${files.length} PDF file(s)`,
-      files: processedFiles,
-      totalChunks: totalChunks,
-      vectorStorage: (process.env.SUPABASE_URL && process.env.SUPABASE_KEY) ? 'enabled' : 'disabled'
-    });
-
-  } catch (error: any) {
-    console.error('PDF Upload Error:', error);
-    res.status(500).json({ error: 'Failed to process PDF files' });
-  }
+// PDF upload endpoint (empty - no PDF processing)
+app.post('/api/upload-pdf', (req: Request, res: Response) => {
+  res.status(501).json({ 
+    error: 'PDF upload not supported. Please use text input in Design Standards instead.',
+    message: 'This endpoint is disabled. Use the Design Standards tab to enter text for AI context.'
+  });
 });
 
 // Feedback response generation endpoint

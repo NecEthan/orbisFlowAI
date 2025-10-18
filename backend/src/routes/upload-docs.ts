@@ -1,10 +1,14 @@
 import express from "express";
-import multer from "multer";
-import { uploadDocument } from "../services/documet.service";
+// multer removed - no file uploads needed
 
 const router = express.Router();
-const upload = multer({ dest: "upload/docs/" });
 
-router.post("/upload", upload.single("file"), uploadDocument);
+// File upload endpoint removed - focusing on text input only
+router.post("/upload", (req, res) => {
+  res.status(501).json({ 
+    error: 'File upload not supported. Please use text input in Design Standards instead.',
+    message: 'This endpoint is disabled. Use the Design Standards tab to enter text for AI context.'
+  });
+});
 
 export default router;
